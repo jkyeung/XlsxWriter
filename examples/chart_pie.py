@@ -4,11 +4,11 @@
 #
 # The demo also shows how to set segment colours. It is possible to
 # define chart colors for most types of XlsxWriter charts
-# via the add_series() method. However, Pie charts are a special case
-# since each segment is represented as a point so it is necessary to
+# via the add_series() method. However, Pie/Doughnut charts are a special
+# case since each segment is represented as a point so it is necessary to
 # assign formatting to each point in the series.
 #
-# Copyright 2013, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 import xlsxwriter
 
@@ -35,9 +35,8 @@ worksheet.write_column('B2', data[1])
 chart1 = workbook.add_chart({'type': 'pie'})
 
 # Configure the series. Note the use of the list syntax to define ranges:
-# List is [ sheet_name, first_row, first_col, last_row, last_col ].
 chart1.add_series({
-    'name': 'Pie sales data',
+    'name':       'Pie sales data',
     'categories': ['Sheet1', 1, 0, 3, 0],
     'values':     ['Sheet1', 1, 1, 3, 1],
 })
@@ -57,7 +56,7 @@ worksheet.insert_chart('C2', chart1, {'x_offset': 25, 'y_offset': 10})
 #
 
 # Create an example Pie chart like above.
-chart2 = workbook.add_chart({'type': 'pie', 'embedded': 1})
+chart2 = workbook.add_chart({'type': 'pie'})
 
 # Configure the series and add user defined segment colours.
 chart2.add_series({
@@ -76,5 +75,29 @@ chart2.set_title({'name': 'Pie Chart with user defined colors'})
 
 # Insert the chart into the worksheet (with an offset).
 worksheet.insert_chart('C18', chart2, {'x_offset': 25, 'y_offset': 10})
+
+#######################################################################
+#
+# Create a Pie chart with rotation of the segments.
+#
+
+# Create an example Pie chart like above.
+chart3 = workbook.add_chart({'type': 'pie'})
+
+# Configure the series.
+chart3.add_series({
+    'name': 'Pie sales data',
+    'categories': '=Sheet1!A2:A4',
+    'values':     '=Sheet1!B2:B4',
+})
+
+# Add a title.
+chart3.set_title({'name': 'Pie Chart with segment rotation'})
+
+# Change the angle/rotation of the first segment.
+chart3.set_rotation(90)
+
+# Insert the chart into the worksheet (with an offset).
+worksheet.insert_chart('C34', chart3, {'x_offset': 25, 'y_offset': 10})
 
 workbook.close()

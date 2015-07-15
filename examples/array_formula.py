@@ -3,7 +3,7 @@
 # Example of how to use Python and the XlsxWriter module to write
 # simple array formulas.
 #
-# Copyright 2013, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 import xlsxwriter
 
@@ -25,7 +25,7 @@ worksheet.write('C7', 10000)
 
 
 # Write an array formula that returns a single value
-worksheet.write('A1', '{=SUM(B1:C1*B2:C2)}')
+worksheet.write_formula('A1', '{=SUM(B1:C1*B2:C2)}')
 
 # Same as above but more verbose.
 worksheet.write_array_formula('A2:A2', '{=SUM(B1:C1*B2:C2)}')

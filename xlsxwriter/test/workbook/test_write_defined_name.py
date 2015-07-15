@@ -2,11 +2,11 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
 import unittest
-from ..compatibility import StringIO
+from ...compatibility import StringIO
 from ...workbook import Workbook
 
 
@@ -33,6 +33,3 @@ class TestWriteDefinedName(unittest.TestCase):
 
     def tearDown(self):
         self.workbook.fileclosed = 1
-
-if __name__ == '__main__':
-    unittest.main()

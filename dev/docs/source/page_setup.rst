@@ -62,52 +62,93 @@ worksheet.set_paper()
 This method is used to set the paper format for the printed output of a
 worksheet. The following paper styles are available:
 
-    =====   ====================    ================
-    Index   Paper format            Paper size
-    =====   ====================    ================
-      0     Printer default
-      1     Letter                  8 1/2 x 11 in
-      2     Letter Small            8 1/2 x 11 in
-      3     Tabloid                 11 x 17 in
-      4     Ledger                  17 x 11 in
-      5     Legal                   8 1/2 x 14 in
-      6     Statement               5 1/2 x 8 1/2 in
-      7     Executive               7 1/4 x 10 1/2 in
-      8     A3                      297 x 420 mm
-      9     A4                      210 x 297 mm
-     10     A4 Small                210 x 297 mm
-     11     A5                      148 x 210 mm
-     12     B4                      250 x 354 mm
-     13     B5                      182 x 257 mm
-     14     Folio                   8 1/2 x 13 in
-     15     Quarto                  215 x 275 mm
-     16                             10x14 in
-     17                             11x17 in
-     18     Note                    8 1/2 x 11 in
-     19     Envelope  9             3 7/8 x 8 7/8
-     20     Envelope 10             4 1/8 x 9 1/2
-     21     Envelope 11             4 1/2 x 10 3/8
-     22     Envelope 12             4 3/4 x 11
-     23     Envelope 14             5 x 11 1/2
-     24     C size sheet
-     25     D size sheet
-     26     E size sheet
-     27     Envelope DL             110 x 220 mm
-     28     Envelope C3             324 x 458 mm
-     29     Envelope C4             229 x 324 mm
-     30     Envelope C5             162 x 229 mm
-     31     Envelope C6             114 x 162 mm
-     32     Envelope C65            114 x 229 mm
-     33     Envelope B4             250 x 353 mm
-     34     Envelope B5             176 x 250 mm
-     35     Envelope B6             176 x 125 mm
-     36     Envelope                110 x 230 mm
-     37     Monarch                 3.875 x 7.5 in
-     38     Envelope                3 5/8 x 6 1/2 in
-     39     Fanfold                 14 7/8 x 11 in
-     40     German Std Fanfold      8 1/2 x 12 in
-     41     German Legal Fanfold    8 1/2 x 13 in
-    =====   ====================    ================
++-------+----------------------+-------------------+
+| Index | Paper format         | Paper size        |
++=======+======================+===================+
+| 0     | Printer default      | Printer default   |
++-------+----------------------+-------------------+
+| 1     | Letter               | 8 1/2 x 11 in     |
++-------+----------------------+-------------------+
+| 2     | Letter Small         | 8 1/2 x 11 in     |
++-------+----------------------+-------------------+
+| 3     | Tabloid              | 11 x 17 in        |
++-------+----------------------+-------------------+
+| 4     | Ledger               | 17 x 11 in        |
++-------+----------------------+-------------------+
+| 5     | Legal                | 8 1/2 x 14 in     |
++-------+----------------------+-------------------+
+| 6     | Statement            | 5 1/2 x 8 1/2 in  |
++-------+----------------------+-------------------+
+| 7     | Executive            | 7 1/4 x 10 1/2 in |
++-------+----------------------+-------------------+
+| 8     | A3                   | 297 x 420 mm      |
++-------+----------------------+-------------------+
+| 9     | A4                   | 210 x 297 mm      |
++-------+----------------------+-------------------+
+| 10    | A4 Small             | 210 x 297 mm      |
++-------+----------------------+-------------------+
+| 11    | A5                   | 148 x 210 mm      |
++-------+----------------------+-------------------+
+| 12    | B4                   | 250 x 354 mm      |
++-------+----------------------+-------------------+
+| 13    | B5                   | 182 x 257 mm      |
++-------+----------------------+-------------------+
+| 14    | Folio                | 8 1/2 x 13 in     |
++-------+----------------------+-------------------+
+| 15    | Quarto               | 215 x 275 mm      |
++-------+----------------------+-------------------+
+| 16    | ---                  | 10x14 in          |
++-------+----------------------+-------------------+
+| 17    | ---                  | 11x17 in          |
++-------+----------------------+-------------------+
+| 18    | Note                 | 8 1/2 x 11 in     |
++-------+----------------------+-------------------+
+| 19    | Envelope 9           | 3 7/8 x 8 7/8     |
++-------+----------------------+-------------------+
+| 20    | Envelope 10          | 4 1/8 x 9 1/2     |
++-------+----------------------+-------------------+
+| 21    | Envelope 11          | 4 1/2 x 10 3/8    |
++-------+----------------------+-------------------+
+| 22    | Envelope 12          | 4 3/4 x 11        |
++-------+----------------------+-------------------+
+| 23    | Envelope 14          | 5 x 11 1/2        |
++-------+----------------------+-------------------+
+| 24    | C size sheet         | ---               |
++-------+----------------------+-------------------+
+| 25    | D size sheet         | ---               |
++-------+----------------------+-------------------+
+| 26    | E size sheet         | ---               |
++-------+----------------------+-------------------+
+| 27    | Envelope DL          | 110 x 220 mm      |
++-------+----------------------+-------------------+
+| 28    | Envelope C3          | 324 x 458 mm      |
++-------+----------------------+-------------------+
+| 29    | Envelope C4          | 229 x 324 mm      |
++-------+----------------------+-------------------+
+| 30    | Envelope C5          | 162 x 229 mm      |
++-------+----------------------+-------------------+
+| 31    | Envelope C6          | 114 x 162 mm      |
++-------+----------------------+-------------------+
+| 32    | Envelope C65         | 114 x 229 mm      |
++-------+----------------------+-------------------+
+| 33    | Envelope B4          | 250 x 353 mm      |
++-------+----------------------+-------------------+
+| 34    | Envelope B5          | 176 x 250 mm      |
++-------+----------------------+-------------------+
+| 35    | Envelope B6          | 176 x 125 mm      |
++-------+----------------------+-------------------+
+| 36    | Envelope             | 110 x 230 mm      |
++-------+----------------------+-------------------+
+| 37    | Monarch              | 3.875 x 7.5 in    |
++-------+----------------------+-------------------+
+| 38    | Envelope             | 3 5/8 x 6 1/2 in  |
++-------+----------------------+-------------------+
+| 39    | Fanfold              | 14 7/8 x 11 in    |
++-------+----------------------+-------------------+
+| 40    | German Std Fanfold   | 8 1/2 x 12 in     |
++-------+----------------------+-------------------+
+| 41    | German Legal Fanfold | 8 1/2 x 13 in     |
++-------+----------------------+-------------------+
 
 
 Note, it is likely that not all of these paper types will be available to the
@@ -144,8 +185,8 @@ Center the worksheet data vertically between the margins on the printed page::
 
     worksheet.center_vertically()
 
-worksheet.worksheet.set_margins()
----------------------------------
+worksheet.set_margins()
+-----------------------
 
 .. py:function:: set_margins([left=0.7,] right=0.7,] top=0.75,] bottom=0.75]]])
 
@@ -165,49 +206,66 @@ default values corresponding to the default Excel values.
 worksheet.set_header()
 ----------------------
 
-.. py:function:: set_header([header='',] margin=0.3]])
+.. py:function:: set_header([header='',] options]])
 
-   Set the printed page header caption and optional margin.
+   Set the printed page header caption and options.
 
    :param string header: Header string with Excel control characters.
-   :param float margin:  Header margin in inches. Default 0.3.
+   :param dict options:  Header options.
 
-Headers and footers are generated using a string which is a combination
-of plain text and control characters.
+Headers and footers are generated using a string which is a combination of
+plain text and control characters.
 
 The available control character are:
 
-    ==================  ==================  ================================
-    Control             Category            Description
-    ==================  ==================  ================================
-    &L                  Justification       Left
-    &C                                      Center
-    &R                                      Right
++---------------+---------------+-----------------------+
+| Control       | Category      | Description           |
++===============+===============+=======================+
+| &L            | Justification | Left                  |
++---------------+---------------+-----------------------+
+| &C            |               | Center                |
++---------------+---------------+-----------------------+
+| &R            |               | Right                 |
++---------------+---------------+-----------------------+
+| &P            | Information   | Page number           |
++---------------+---------------+-----------------------+
+| &N            |               | Total number of pages |
++---------------+---------------+-----------------------+
+| &D            |               | Date                  |
++---------------+---------------+-----------------------+
+| &T            |               | Time                  |
++---------------+---------------+-----------------------+
+| &F            |               | File name             |
++---------------+---------------+-----------------------+
+| &A            |               | Worksheet name        |
++---------------+---------------+-----------------------+
+| &Z            |               | Workbook path         |
++---------------+---------------+-----------------------+
+| &fontsize     | Font          | Font size             |
++---------------+---------------+-----------------------+
+| &"font,style" |               | Font name and style   |
++---------------+---------------+-----------------------+
+| &U            |               | Single underline      |
++---------------+---------------+-----------------------+
+| &E            |               | Double underline      |
++---------------+---------------+-----------------------+
+| &S            |               | Strikethrough         |
++---------------+---------------+-----------------------+
+| &X            |               | Superscript           |
++---------------+---------------+-----------------------+
+| &Y            |               | Subscript             |
++---------------+---------------+-----------------------+
+| &[Picture]    | Images        | Image placeholder     |
++---------------+---------------+-----------------------+
+| &G            |               | Same as &[Picture]    |
++---------------+---------------+-----------------------+
 
-    &P                  Information         Page number
-    &N                                      Total number of pages
-    &D                                      Date
-    &T                                      Time
-    &F                                      File name
-    &A                                      Worksheet name
-    &Z                                      Workbook path
-
-    &fontsize           Font                Font size
-    &"font,style"                           Font name and style
-    &U                                      Single underline
-    &E                                      Double underline
-    &S                                      Strikethrough
-    &X                                      Superscript
-    &Y                                      Subscript
-
-    &&                  Miscellaneous       Literal ampersand &
-    ==================  ==================  ================================
 
 Text in headers and footers can be justified (aligned) to the left, center and
 right by prefixing the text with the control characters ``&L``, ``&C`` and
 ``&R``.
 
-For example (with ASCII art representation of the results)::
+For example::
 
     worksheet.set_header('&LHello')
 
@@ -272,6 +330,15 @@ format::
        |                    Updated at 12:30 PM                        |
        |                                                               |
 
+Images can be inserted using the ``options`` shown below. Each image must
+have a placeholder in header string using the ``&[Picture]`` or ``&G``
+control characters::
+
+    worksheet.set_header('&L&G', {'image_left': 'logo.jpg'})
+
+.. image:: _images/header_image.png
+
+
 You can specify the font size of a section of the text by prefixing it with the
 control character ``&n`` where ``n`` is the font size::
 
@@ -298,33 +365,87 @@ the equivalent VBA code looks like this::
     .CenterHeader = "&""Times New Roman,Regular""Hello"
     .RightHeader = ""
 
+Alternatively you can inspect the header and footer strings in an Excel file
+by unzipping it and grepping the XML sub-files. The following shows how to do
+that using `libxml's xmllint <http://xmlsoft.org/xmllint.html>`_ to format the
+XML for clarity::
+
+    $ unzip myfile.xlsm -d myfile
+    $ xmllint --format `find myfile -name "*.xml" | xargs` | egrep "Header|Footer"
+
+      <headerFooter scaleWithDoc="0">
+        <oddHeader>&amp;L&amp;P</oddHeader>
+      </headerFooter>
+
+Note that in this case you need to unescape the Html. In the above example the
+header string would be::
+
+      '&L&P'
+
+
 To include a single literal ampersand ``&`` in a header or footer you should
 use a double ampersand ``&&``::
 
-    worksheet1.set_header('&CCuriouser and Curiouser - Attorneys at Law')
+    worksheet1.set_header('&CCuriouser && Curiouser - Attorneys at Law')
 
-As stated above the margin parameter is optional. As with the other margins the
-value should be in inches. The default header and footer margin is 0.3 inch.
-The header and footer margin size can be set as follows::
+The available optons are:
 
-    worksheet.set_header('&CHello', 0.75)
+* ``margin``: (float) Header margin in inches. Defaults to 0.3 inch.
+* ``image_left``: (string) The path to the image. Needs ``&G`` placeholder.
+* ``image_center``: (string) Same as above.
+* ``image_right``: (string) Same as above.
+* ``image_data_left``: (BytesIO) A byte stream of the image data.
+* ``image_data_center``: (BytesIO) Same as above.
+* ``image_data_right``: (BytesIO) Same as above.
+* ``scale_with_doc``: (boolean) Scale header with document. Defaults to True.
+* ``align_with_margins``: (boolean) Align header to margins. Defaults to True.
 
-The header and footer margins are independent of the top and bottom margins.
+As with the other margins the ``margin`` value should be in inches. The
+default header and footer margin is 0.3 inch. It can be changed as follows::
 
-Note, the header or footer string must be less than 255 characters. Strings
-longer than this will not be written and an exception will be thrown.
+    worksheet.set_header('&CHello', {'margin': 0.75})
+
+The header and footer margins are independent of, and should not be confused
+with, the top and bottom worksheet margins.
+
+The image options must have an accompanying ``&[Picture]`` or ``&G`` control
+character in the header string::
+
+     worksheet.set_header('&L&[Picture]&C&[Picture]&R&[Picture]',
+                          {'image_left':   'red.jpg',
+                           'image_center': 'blue.jpg',
+                           'image_right':  'yellow.jpg'})
+
+
+The ``image_data_`` parameters are used to add an in-memory byte stream in
+:class:`io.BytesIO` format::
+
+     image_file = open('logo.jpg', 'rb')
+     image_data = BytesIO(image_file.read())
+
+     worksheet.set_header('&L&G',
+                          {'image_left': 'logo.jpg',
+                           'image_data_left': image_data})
+
+When using the ``image_data_`` parameters a filename must still be passed to
+to the equivalent ``image_`` parameter since it is required by Excel. See also
+:func:`insert_image` for details on handling images from byte streams.
+
+Note, Excel does not allow header or footer strings longer than 255 characters,
+including control characters. Strings longer than this will not be written
+and an exception will be thrown.
 
 See also :ref:`ex_headers_footers`.
 
 worksheet.set_footer()
 ----------------------
 
-.. py:function:: set_footer([footer='',] margin=0.3]])
+.. py:function:: set_footer([footer='',] options]])
 
-   Set the printed page footer caption and optional margin.
+   Set the printed page footer caption and options.
 
    :param string footer: Footer string with Excel control characters.
-   :param float margin:  Footer margin in inches. Default 0.3.
+   :param dict options:  Footer options.
 
 The syntax of the ``set_footer()`` method is the same as :func:`set_header`.
 
@@ -399,8 +520,8 @@ The following values of ``option`` are valid:
 1. Hide printed gridlines only.
 2. Hide screen and printed gridlines.
 
-If you don't supply an argument the default option is 1, i.e. only the
-printed gridlines are hidden.
+If you don't supply an argument the default option is 1, i.e. only the printed
+gridlines are hidden.
 
 
 worksheet.print_row_col_headers()
@@ -430,7 +551,6 @@ worksheet.print_area()
    :param first_col:   The first column of the range.
    :param last_row:    The last row of the range.
    :param last_col:    The last col of the range.
-   :param formula:     Array formula to write to cell.
    :type  first_row:   integer
    :type  first_col:   integer
    :type  last_row:    integer
@@ -443,7 +563,10 @@ All four parameters must be specified. You can also use A1 notation, see
 
     worksheet1.print_area('A1:H20')     # Cells A1 to H20.
     worksheet2.print_area(0, 0, 19, 7)  # The same as above.
-    worksheet3.print_area('A:H')        # Columns A to H if rows have data.
+
+In order to set a row or column range you must specify the entire range::
+
+    worksheet3.print_area('A1:H1048576')  # Same as A:H.
 
 
 worksheet.print_across()
@@ -483,9 +606,9 @@ worksheet.fit_to_pages()
 
 The ``fit_to_pages()`` method is used to fit the printed area to a specific
 number of pages both vertically and horizontally. If the printed area exceeds
-the specified number of pages it will be scaled down to fit. This ensures
-that the printed area will always appear on the specified number of pages
-even if the page size or margins change::
+the specified number of pages it will be scaled down to fit. This ensures that
+the printed area will always appear on the specified number of pages even if
+the page size or margins change::
 
     worksheet1.fit_to_pages(1, 1)  # Fit to 1x1 pages.
     worksheet2.fit_to_pages(2, 1)  # Fit to 2x1 pages.
@@ -502,9 +625,9 @@ zero::
 
 .. Note::
    Although it is valid to use both :func:`fit_to_pages()` and
-   :func:`set_print_scale()` on the same worksheet only one of these options
-   can be active at a time. The last method call made will set the active
-   option.
+   :func:`set_print_scale()` on the same worksheet in Excel only allows one of
+   these options to be active at a time. The last method call made will set
+   the active option.
 
 .. Note::
    The :func:`fit_to_pages()` will override any manual page breaks that are
@@ -528,6 +651,7 @@ worksheet.set_start_page()
 The ``set_start_page()`` method is used to set the number of the starting page
 when the worksheet is printed out::
 
+    # Start print from page 2.
     worksheet.set_start_page(2)
 
 worksheet.set_print_scale()
@@ -552,8 +676,9 @@ the scale of the visible page in Excel. For that you should use
 :func:`set_zoom()`.
 
 Note also that although it is valid to use both ``fit_to_pages()`` and
-``set_print_scale()`` on the same worksheet only one of these options can
-be active at a time. The last method call made will set the active option.
+``set_print_scale()`` on the same worksheet Excel only allows one of these
+options to be active at a time. The last method call made will set the active
+option.
 
 
 worksheet.set_h_pagebreaks()
@@ -563,27 +688,29 @@ worksheet.set_h_pagebreaks()
 
    Set the horizontal page breaks on a worksheet.
 
-   :param list breaks: List of pagebreak rows.
+   :param list breaks: List of page break rows.
 
-The ``set_h_pagebreaks()`` method adds horizontal page breaks to a worksheet.
-A page break causes all the data that follows it to be printed on the next
-page. Horizontal page breaks act between rows. To create a page break between
-rows 20 and 21 you must specify the break at row 21. However in zero index
-notation this is actually row 20. So you can pretend for a small while that
-you are using 1 index notation::
+The ``set_h_pagebreaks()`` method adds horizontal page breaks to a worksheet. A
+page break causes all the data that follows it to be printed on the next page.
+Horizontal page breaks act between rows.
 
-    worksheet1.set_h_pagebreaks([20])  # Break between row 20 and 21.
+The ``set_h_pagebreaks()`` method takes a list of one or more page breaks::
 
-The ``set_v_pagebreaks()`` method takes a list of page breaks::
-
+    worksheet1.set_v_pagebreaks([20])
     worksheet2.set_v_pagebreaks([20, 40, 60, 80, 100])
+
+To create a page break between rows 20 and 21 you must specify the break at row
+21. However in zero index notation this is actually row 20. So you can pretend
+for a small while that you are using 1 index notation::
+
+    worksheet.set_h_pagebreaks([20])  # Break between row 20 and 21.
 
 .. Note::
    Note: If you specify the "fit to page" option via the ``fit_to_pages()``
    method it will override all manual page breaks.
 
-There is a silent limitation of 1023 horizontal page breaks per worksheet
-in line with an Excel internal limitation.
+There is a silent limitation of 1023 horizontal page breaks per worksheet in
+line with an Excel internal limitation.
 
 
 worksheet.set_v_pagebreaks()
@@ -593,8 +720,7 @@ worksheet.set_v_pagebreaks()
 
    Set the vertical page breaks on a worksheet.
 
-   :param list breaks: List of pagebreak columns.
+   :param list breaks: List of page break columns.
 
 The ``set_v_pagebreaks()`` method is the same as the above
 :func:`set_h_pagebreaks()` method except it adds page breaks between columns.
-

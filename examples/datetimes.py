@@ -3,7 +3,7 @@
 # A simple program to write some dates and times to an Excel file
 # using the XlsxWriter Python module.
 #
-# Copyright 2013, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 from datetime import datetime
 import xlsxwriter
@@ -13,7 +13,7 @@ workbook = xlsxwriter.Workbook('datetimes.xlsx')
 worksheet = workbook.add_worksheet()
 bold = workbook.add_format({'bold': True})
 
-# Expand the first columns so that the date is visible.
+# Expand the first columns so that the dates are visible.
 worksheet.set_column('A:B', 30)
 
 # Write the column headers.

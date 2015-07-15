@@ -2,11 +2,11 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
 import unittest
-from ..compatibility import StringIO
+from ...compatibility import StringIO
 from ...vml import Vml
 
 
@@ -30,7 +30,3 @@ class TestWriteOidmap(unittest.TestCase):
         got = self.fh.getvalue()
 
         self.assertEqual(got, exp)
-
-
-if __name__ == '__main__':
-    unittest.main()

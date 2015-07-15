@@ -2,23 +2,32 @@
 #
 # Worksheet - A class for writing Excel Worksheets.
 #
-# Copyright 2013, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 import re
+import datetime
 from warnings import warn
 
 COL_NAMES = {}
 range_parts = re.compile(r'(\$?)([A-Z]{1,3})(\$?)(\d+)')
 
 
-def xl_rowcol_to_cell(row, col, row_abs=0, col_abs=0):
+def xl_rowcol_to_cell(row, col, row_abs=False, col_abs=False):
     """
-    TODO. Add Utility.py docs.
+    Convert a zero indexed row and column cell reference to a A1 style string.
+
+    Args:
+       row:     The cell row.    Int.
+       col:     The cell column. Int.
+       row_abs: Optional flag to make the row absolute.    Bool.
+       col_abs: Optional flag to make the column absolute. Bool.
+
+    Returns:
+        A1 style string.
 
     """
     row += 1  # Change to 1-index.
     row_abs = '$' if row_abs else ''
-    col_abs = '$' if col_abs else ''
 
     col_str = xl_col_to_name(col, col_abs)
 
@@ -27,7 +36,14 @@ def xl_rowcol_to_cell(row, col, row_abs=0, col_abs=0):
 
 def xl_rowcol_to_cell_fast(row, col):
     """
-    Optimised version of the xl_rowcol_to_cell function.
+    Optimised version of the xl_rowcol_to_cell function. Only used internally.
+
+    Args:
+       row: The cell row.    Int.
+       col: The cell column. Int.
+
+    Returns:
+        A1 style string.
 
     """
     if col in COL_NAMES:
@@ -39,9 +55,16 @@ def xl_rowcol_to_cell_fast(row, col):
     return col_str + str(row + 1)
 
 
-def xl_col_to_name(col_num, col_abs=0):
+def xl_col_to_name(col_num, col_abs=False):
     """
-    TODO. Add Utility.py docs.
+    Convert a zero indexed column cell reference to a string.
+
+    Args:
+       col:     The cell column. Int.
+       col_abs: Optional flag to make the column absolute. Bool.
+
+    Returns:
+        Column style string.
 
     """
     col_num += 1  # Change to 1-index.
@@ -49,7 +72,6 @@ def xl_col_to_name(col_num, col_abs=0):
     col_abs = '$' if col_abs else ''
 
     while col_num:
-
         # Set remainder from 1 .. 26
         remainder = col_num % 26
 
@@ -70,11 +92,17 @@ def xl_col_to_name(col_num, col_abs=0):
 
 def xl_cell_to_rowcol(cell_str):
     """
-    TODO. Add Utility.py docs.
+    Convert a cell reference in A1 notation to a zero indexed row and column.
+
+    Args:
+       cell_str:  A1 style string.
+
+    Returns:
+        row, col: Zero indexed cell row and column indices.
 
     """
     if not cell_str:
-        return (0, 0)
+        return 0, 0
 
     match = range_parts.match(cell_str)
     col_str = match.group(2)
@@ -96,11 +124,18 @@ def xl_cell_to_rowcol(cell_str):
 
 def xl_cell_to_rowcol_abs(cell_str):
     """
-    TODO. Add Utility.py docs.
+    Convert an absolute cell reference in A1 notation to a zero indexed
+    row and column, with True/False values for absolute rows or columns.
+
+    Args:
+       cell_str: A1 style string.
+
+    Returns:
+        row, col, row_abs, col_abs:  Zero indexed cell row and column indices.
 
     """
     if not cell_str:
-        return (0, 0, 0, 0)
+        return 0, 0, False, False
 
     match = range_parts.match(cell_str)
 
@@ -110,14 +145,14 @@ def xl_cell_to_rowcol_abs(cell_str):
     row_str = match.group(4)
 
     if col_abs:
-        col_abs = 1
+        col_abs = True
     else:
-        col_abs = 0
+        col_abs = False
 
     if row_abs:
-        row_abs = 1
+        row_abs = True
     else:
-        row_abs = 0
+        row_abs = False
 
     # Convert base26 column string to number.
     expn = 0
@@ -135,13 +170,89 @@ def xl_cell_to_rowcol_abs(cell_str):
 
 def xl_range(first_row, first_col, last_row, last_col):
     """
-    TODO. Add Utility.py docs.
+    Convert zero indexed row and col cell references to a A1:B1 range string.
+
+    Args:
+       first_row: The first cell row.    Int.
+       first_col: The first cell column. Int.
+       last_row:  The last cell row.     Int.
+       last_col:  The last cell column.  Int.
+
+    Returns:
+        A1:B1 style range string.
 
     """
     range1 = xl_rowcol_to_cell(first_row, first_col)
     range2 = xl_rowcol_to_cell(last_row, last_col)
 
     return range1 + ':' + range2
+
+
+def xl_range_abs(first_row, first_col, last_row, last_col):
+    """
+    Convert zero indexed row and col cell references to a $A$1:$B$1 absolute
+    range string.
+
+    Args:
+       first_row: The first cell row.    Int.
+       first_col: The first cell column. Int.
+       last_row:  The last cell row.     Int.
+       last_col:  The last cell column.  Int.
+
+    Returns:
+        $A$1:$B$1 style range string.
+
+    """
+    range1 = xl_rowcol_to_cell(first_row, first_col, True, True)
+    range2 = xl_rowcol_to_cell(last_row, last_col, True, True)
+
+    return range1 + ':' + range2
+
+
+def xl_range_formula(sheetname, first_row, first_col, last_row, last_col):
+    """
+    Convert worksheet name and zero indexed row and col cell references to
+    a Sheet1!A1:B1 range formula string.
+
+    Args:
+       sheetname: The worksheet name.    String.
+       first_row: The first cell row.    Int.
+       first_col: The first cell column. Int.
+       last_row:  The last cell row.     Int.
+       last_col:  The last cell column.  Int.
+
+    Returns:
+        A1:B1 style range string.
+
+    """
+    cell_range = xl_range_abs(first_row, first_col, last_row, last_col)
+    sheetname = quote_sheetname(sheetname)
+
+    return sheetname + '!' + cell_range
+
+
+def quote_sheetname(sheetname):
+    """
+    Convert a worksheet name to a quoted  name if it contains spaces or
+    special characters.
+
+    Args:
+       sheetname: The worksheet name. String.
+
+    Returns:
+        A quoted worksheet string.
+
+    """
+
+    # TODO. Possibly extend this to quote sheetnames that look like ranges.
+    if not sheetname.isalnum() and not sheetname.startswith("'"):
+        # Double quote any single quotes.
+        sheetname = sheetname.replace("'", "''")
+
+        # Singe quote the sheet name.
+        sheetname = "'%s'" % sheetname
+
+    return sheetname
 
 
 def xl_color(color):
@@ -175,6 +286,16 @@ def xl_color(color):
 
     # Convert the RGB color to the Excel ARGB format.
     return "FF" + color.lstrip('#').upper()
+
+
+def get_rgb_color(color):
+    # Convert the user specified colour to an RGB colour.
+    rgb_color = xl_color(color)
+
+    # Remove leading FF from RGB colour for charts.
+    rgb_color = re.sub(r'^FF', '', rgb_color)
+
+    return rgb_color
 
 
 def get_sparkline_style(style_id):
@@ -478,3 +599,57 @@ def get_sparkline_style(style_id):
     ]
 
     return styles[style_id]
+
+
+def supported_datetime(dt):
+    # Determine is an argument is a supported datetime object.
+    return(isinstance(dt, (datetime.datetime,
+                           datetime.date,
+                           datetime.time,
+                           datetime.timedelta)))
+
+
+def datetime_to_excel_datetime(dt_obj, date_1904):
+    # Convert a datetime object to an Excel serial date and time. The integer
+    # part of the number stores the number of days since the epoch and the
+    # fractional part stores the percentage of the day.
+
+    if date_1904:
+        # Excel for Mac date epoch.
+        epoch = datetime.datetime(1904, 1, 1)
+    else:
+        # Default Excel epoch.
+        epoch = datetime.datetime(1899, 12, 31)
+
+    # We handle datetime .datetime, .date and .time objects but convert
+    # them to datetime.datetime objects and process them in the same way.
+    if isinstance(dt_obj, datetime.datetime):
+        delta = dt_obj - epoch
+    elif isinstance(dt_obj, datetime.date):
+        dt_obj = datetime.datetime.fromordinal(dt_obj.toordinal())
+        delta = dt_obj - epoch
+    elif isinstance(dt_obj, datetime.time):
+        dt_obj = datetime.datetime.combine(epoch, dt_obj)
+        delta = dt_obj - epoch
+    elif isinstance(dt_obj, datetime.timedelta):
+        delta = dt_obj
+    else:
+        raise TypeError("Unknown or unsupported datetime type")
+
+    # Convert a Python datetime.datetime value to an Excel date number.
+    excel_time = (delta.days
+                  + (float(delta.seconds)
+                     + float(delta.microseconds) / 1E6)
+                  / (60 * 60 * 24))
+
+    # Special case for datetime where time only has been specified and
+    # the default date of 1900-01-01 is used.
+    if (not isinstance(dt_obj, datetime.timedelta)
+            and dt_obj.isocalendar() == (1900, 1, 1)):
+        excel_time -= 1
+
+    # Account for Excel erroneously treating 1900 as a leap year.
+    if not date_1904 and excel_time > 59:
+        excel_time += 1
+
+    return excel_time

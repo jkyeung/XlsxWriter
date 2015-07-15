@@ -2,16 +2,14 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
-import unittest
-import os
+from ..excel_comparsion_test import ExcelComparisonTest
 from ...workbook import Workbook
-from ..helperfunctions import _compare_xlsx_files
 
 
-class TestCompareXLSXFiles(unittest.TestCase):
+class TestCompareXLSXFiles(ExcelComparisonTest):
     """
     Test file created by XlsxWriter against a file created by Excel.
 
@@ -31,11 +29,8 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
     def test_create_file(self):
         """Test the creation of a simple workbook."""
-        filename = self.got_filename
 
-        ####################################################
-
-        workbook = Workbook(filename)
+        workbook = Workbook(self.got_filename)
 
         worksheet1 = workbook.add_worksheet()
         workbook.add_worksheet('Data Sheet')
@@ -52,22 +47,12 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
         workbook.close()
 
-        ####################################################
-
-        got, exp = _compare_xlsx_files(self.got_filename,
-                                       self.exp_filename,
-                                       self.ignore_files,
-                                       self.ignore_elements)
-
-        self.assertEqual(got, exp)
+        self.assertExcelEqual()
 
     def test_create_file_A1(self):
         """Test the creation of a simple workbook with A1 notation."""
-        filename = self.got_filename
 
-        ####################################################
-
-        workbook = Workbook(filename)
+        workbook = Workbook(self.got_filename)
 
         worksheet1 = workbook.add_worksheet()
         worksheet2 = workbook.add_worksheet('Data Sheet')
@@ -84,20 +69,26 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
         workbook.close()
 
-        ####################################################
+        self.assertExcelEqual()
 
-        got, exp = _compare_xlsx_files(self.got_filename,
-                                       self.exp_filename,
-                                       self.ignore_files,
-                                       self.ignore_elements)
+    def test_create_file_in_memory(self):
+        """Test the creation of a simple workbook."""
 
-        self.assertEqual(got, exp)
+        workbook = Workbook(self.got_filename, {'in_memory': True})
 
-    def tearDown(self):
-        # Cleanup.
-        if os.path.exists(self.got_filename):
-            os.remove(self.got_filename)
+        worksheet1 = workbook.add_worksheet()
+        workbook.add_worksheet('Data Sheet')
+        worksheet3 = workbook.add_worksheet()
 
+        bold = workbook.add_format({'bold': 1})
 
-if __name__ == '__main__':
-    unittest.main()
+        worksheet1.write_string(0, 0, 'Foo')
+        worksheet1.write_number(1, 0, 123)
+
+        worksheet3.write_string(1, 1, 'Foo')
+        worksheet3.write_string(2, 1, 'Bar', bold)
+        worksheet3.write_number(3, 2, 234)
+
+        workbook.close()
+
+        self.assertExcelEqual()

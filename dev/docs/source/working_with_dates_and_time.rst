@@ -15,7 +15,7 @@ a date you must apply an Excel number format to it. Here are some examples:
 .. code-block:: python
 
     import xlsxwriter
-    
+
     workbook = xlsxwriter.Workbook('date_examples.xlsx')
     worksheet = workbook.add_worksheet()
 
@@ -44,7 +44,7 @@ a date you must apply an Excel number format to it. Here are some examples:
     worksheet.write('A6', number, format6)       # 28 Feb 2013
 
     format7 = workbook.add_format({'num_format': 'mmm d yyyy hh:mm AM/PM'})
-    worksheet.write('A7', number, format7)       # Feb 28 2008 12:00 PM
+    worksheet.write('A7', number, format7)       # Feb 28 2013 12:00 PM
 
     workbook.close()
 
@@ -54,10 +54,10 @@ To make working with dates and times a little easier the XlsxWriter module
 provides a :func:`write_datetime` method to write dates in standard library
 :mod:`datetime` format.
 
-Specifically it supports datetime objects of type :class:`datetime.datetime`, 
-:class:`datetime.date` and :class:`datetime.time`. 
+Specifically it supports datetime objects of type :class:`datetime.datetime`,
+:class:`datetime.date`, :class:`datetime.time` and :class:`datetime.timedelta`.
 
-There are many way to create datetime objects, for example the 
+There are many way to create datetime objects, for example the
 :meth:`datetime.datetime.strptime` method::
 
     date_time = datetime.datetime.strptime('2013-01-23', '%Y-%m-%d')
@@ -79,24 +79,24 @@ formats:
 
     from datetime import datetime
     import xlsxwriter
-    
+
     # Create a workbook and add a worksheet.
     workbook = xlsxwriter.Workbook('datetimes.xlsx')
     worksheet = workbook.add_worksheet()
     bold = workbook.add_format({'bold': True})
-    
-    # Expand the first columns so that the date is visible.
+
+    # Expand the first columns so that the dates are visible.
     worksheet.set_column('A:B', 30)
-    
+
     # Write the column headers.
     worksheet.write('A1', 'Formatted date', bold)
     worksheet.write('B1', 'Format', bold)
-    
+
     # Create a datetime object to use in the examples.
-    
+
     date_time = datetime.strptime('2013-01-23 12:30:05.123',
                                   '%Y-%m-%d %H:%M:%S.%f')
-    
+
     # Examples date and time formats.
     date_formats = (
         'dd/mm/yy',
@@ -114,24 +114,44 @@ formats:
         'hh:mm:ss',
         'hh:mm:ss.000',
     )
-    
+
     # Start from first row after headers.
     row = 1
-    
+
     # Write the same date and time using each of the above formats.
     for date_format_str in date_formats:
-    
+
         # Create a format for the date or time.
         date_format = workbook.add_format({'num_format': date_format_str,
                                           'align': 'left'})
-    
+
         # Write the same date using different formats.
         worksheet.write_datetime(row, 0, date_time, date_format)
-    
+
         # Also write the format string for comparison.
         worksheet.write_string(row, 1, date_format_str)
-    
+
         row += 1
 
+    workbook.close()
 
 .. image:: _images/working_with_dates_and_times02.png
+
+
+Default Date Formatting
+-----------------------
+
+In certain circumstances you may wish to apply a default date format when
+writing datetime objects, for example, when handling a row of data with
+:func:`write_row`.
+
+In these cases it is possible to specify a default date format string using the
+:func:`Workbook` constructor ``default_date_format`` option::
+
+    workbook = xlsxwriter.Workbook('datetimes.xlsx', {'default_date_format':
+                                                      'dd/mm/yy'})
+    worksheet = workbook.add_worksheet()
+    date_time = datetime.now()
+    worksheet.write_datetime(0, 0, date_time)  # Formatted as 'dd/mm/yy'
+
+    workbook.close()

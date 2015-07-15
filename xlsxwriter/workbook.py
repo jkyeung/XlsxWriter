@@ -2,23 +2,25 @@
 #
 # Workbook - A class for writing the Excel XLSX Workbook file.
 #
-# Copyright 2013, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
 # Standard packages.
+import sys
 import re
 import os
-import tempfile
 import operator
-import shutil
 from warnings import warn
 from datetime import datetime
 from zipfile import ZipFile, ZIP_DEFLATED
 from struct import unpack
 
+from .compatibility import str_types
+
 # Package imports.
 from . import xmlwriter
 from xlsxwriter.worksheet import Worksheet
+from xlsxwriter.chartsheet import Chartsheet
 from xlsxwriter.sharedstrings import SharedStringTable
 from xlsxwriter.format import Format
 from xlsxwriter.packager import Packager
@@ -26,6 +28,7 @@ from .utility import xl_cell_to_rowcol
 from xlsxwriter.chart_area import ChartArea
 from xlsxwriter.chart_bar import ChartBar
 from xlsxwriter.chart_column import ChartColumn
+from xlsxwriter.chart_doughnut import ChartDoughnut
 from xlsxwriter.chart_line import ChartLine
 from xlsxwriter.chart_pie import ChartPie
 from xlsxwriter.chart_radar import ChartRadar
@@ -55,9 +58,20 @@ class Workbook(xmlwriter.XMLwriter):
         super(Workbook, self).__init__()
 
         self.filename = filename
+
         self.tmpdir = options.get('tmpdir', None)
         self.date_1904 = options.get('date_1904', False)
-        self.strings_to_numbers = options.get('strings_to_numbers', True)
+        self.strings_to_numbers = options.get('strings_to_numbers', False)
+        self.strings_to_formulas = options.get('strings_to_formulas', True)
+        self.strings_to_urls = options.get('strings_to_urls', True)
+        self.nan_inf_to_errors = options.get('nan_inf_to_errors', False)
+        self.default_date_format = options.get('default_date_format', None)
+        self.optimization = options.get('constant_memory', False)
+        self.in_memory = options.get('in_memory', False)
+        self.excel2003_style = options.get('excel2003_style', False)
+        self.default_format_properties = \
+            options.get('default_format_properties', {})
+
         self.worksheet_meta = WorksheetMeta()
         self.selected = 0
         self.fileclosed = 0
@@ -86,7 +100,6 @@ class Workbook(xmlwriter.XMLwriter):
         self.localtime = datetime.now()
         self.num_vml_files = 0
         self.num_comment_files = 0
-        self.optimization = options.get('constant_memory', 0)
         self.x_window = 240
         self.y_window = 15
         self.window_width = 16095
@@ -94,17 +107,53 @@ class Workbook(xmlwriter.XMLwriter):
         self.tab_ratio = 500
         self.str_table = SharedStringTable()
         self.vba_project = None
+        self.vba_is_stream = False
         self.vba_codename = None
         self.image_types = {}
         self.images = []
+        self.border_count = 0
+        self.fill_count = 0
+        self.drawing_count = 0
+        self.calc_mode = "auto"
+        self.calc_on_load = True
+        self.allow_zip64 = False
+        self.calc_id = 124519
+
+        # We can't do 'constant_memory' mode while doing 'in_memory' mode.
+        if self.in_memory:
+            self.optimization = False
 
         # Add the default cell format.
-        self.add_format({'xf_index': 0})
+        if self.excel2003_style:
+            self.add_format({'xf_index': 0, 'font_family': 0})
+        else:
+            self.add_format({'xf_index': 0})
+
+        # Add a default URL format.
+        self.default_url_format = self.add_format({'color': 'blue',
+                                                   'underline': 1})
+
+        # Add the default date format.
+        if self.default_date_format is not None:
+            self.default_date_format = \
+                self.add_format({'num_format': self.default_date_format})
 
     def __del__(self):
         """Close file in destructor if it hasn't been closed explicitly."""
-        if not self.fileclosed:
-            self.close()
+        try:
+            if not self.fileclosed:
+                self.close()
+        except:
+            raise Exception("Exception caught in workbook destructor. "
+                            "Explicit close() may be required for workbook.")
+
+    def __enter__(self):
+        """Return self object to use with "with" statement."""
+        return self
+
+    def __exit__(self, type, value, traceback):
+        """Close workbook when exiting "with" statement."""
+        self.close()
 
     def add_worksheet(self, name=None):
         """
@@ -117,28 +166,20 @@ class Workbook(xmlwriter.XMLwriter):
             Reference to a worksheet object.
 
         """
-        sheet_index = len(self.worksheets_objs)
-        name = self._check_sheetname(name)
+        return self._add_sheet(name, is_chartsheet=False)
 
-        # Initialisation data to pass to the worksheet.
-        init_data = {
-            'name': name,
-            'index': sheet_index,
-            'str_table': self.str_table,
-            'worksheet_meta': self.worksheet_meta,
-            'optimization': self.optimization,
-            'tmpdir': self.tmpdir,
-            'date_1904': self.date_1904,
-            'strings_to_numbers': self.strings_to_numbers,
-        }
+    def add_chartsheet(self, name=None):
+        """
+        Add a new chartsheet to the Excel workbook.
 
-        worksheet = Worksheet()
-        worksheet._initialize(init_data)
+        Args:
+            name: The chartsheet name. Defaults to 'Sheet1', etc.
 
-        self.worksheets_objs.append(worksheet)
-        self.sheetnames.append(name)
+        Returns:
+            Reference to a chartsheet object.
 
-        return worksheet
+        """
+        return self._add_sheet(name, is_chartsheet=True)
 
     def add_format(self, properties={}):
         """
@@ -151,7 +192,15 @@ class Workbook(xmlwriter.XMLwriter):
             Reference to a Format object.
 
         """
-        xf_format = Format(properties,
+        format_properties = self.default_format_properties.copy()
+
+        if self.excel2003_style:
+            format_properties = {'font_name': 'Arial', 'font_size': 10,
+                                 'theme': 1 * -1}
+
+        format_properties.update(properties)
+
+        xf_format = Format(format_properties,
                            self.xf_format_indices,
                            self.dxf_format_indices)
 
@@ -173,7 +222,7 @@ class Workbook(xmlwriter.XMLwriter):
         """
 
         # Type must be specified so we can create the required chart instance.
-        chart_type = options.get('type', 'None')
+        chart_type = options.get('type')
         if chart_type is None:
             warn("Chart type must be defined in add_chart()")
             return
@@ -184,6 +233,8 @@ class Workbook(xmlwriter.XMLwriter):
             chart = ChartBar(options)
         elif chart_type == 'column':
             chart = ChartColumn(options)
+        elif chart_type == 'doughnut':
+            chart = ChartDoughnut(options)
         elif chart_type == 'line':
             chart = ChartLine(options)
         elif chart_type == 'pie':
@@ -202,10 +253,31 @@ class Workbook(xmlwriter.XMLwriter):
         if 'name' in options:
             chart.chart_name = options['name']
 
-        chart._set_embedded_config_data()
+        chart.embedded = True
+        chart.date_1904 = self.date_1904
+
         self.charts.append(chart)
 
         return chart
+
+    def add_vba_project(self, vba_project, is_stream=False):
+        """
+        Add a vbaProject binary to the Excel workbook.
+
+        Args:
+            vba_project: The vbaProject binary file name.
+            is_stream:   vba_project is an in memory byte stream.
+
+        Returns:
+            Nothing.
+
+        """
+        if not is_stream and not os.path.exists(vba_project):
+            warn("VBA project binary file '%s' not found." % vba_project)
+            return -1
+
+        self.vba_project = vba_project
+        self.vba_is_stream = is_stream
 
     def close(self):
         """
@@ -234,6 +306,31 @@ class Workbook(xmlwriter.XMLwriter):
 
         """
         self.doc_properties = properties
+
+    def set_calc_mode(self, mode, calc_id=None):
+        """
+        Set the Excel caclcuation mode for the workbook.
+
+        Args:
+            mode: String containing one of:
+                * manual
+                * auto_except_tables
+                * auto
+
+        Returns:
+            Nothing.
+
+        """
+        self.calc_mode = mode
+
+        if mode == 'manual':
+            self.calc_on_load = False
+        elif mode == 'auto_except_tables':
+            self.calc_mode = 'autoNoTable'
+
+        # Leave undocumented for now. Rarely required.
+        if calc_id:
+            self.calc_id = calc_id
 
     def define_name(self, name, formula):
         # Create a defined name in Excel. We handle global/workbook level
@@ -273,14 +370,22 @@ class Workbook(xmlwriter.XMLwriter):
             # Use -1 to indicate global names.
             sheet_index = -1
 
-        # Warn if the sheet name contains invalid chars as defined by Excel.
-        if not re.match(r'^[a-zA-Z_\\][a-zA-Z_.]+', name):
+        # Warn if the defined name contains invalid chars as defined by Excel.
+        if (not re.match(r'^[\w\\][\w.]*$', name, re.UNICODE)
+                or re.match(r'^\d', name)):
             warn("Invalid Excel characters in defined_name(): '%s'" % name)
             return -1
 
-        # Warn if the sheet name looks like a cell name.
+        # Warn if the defined name looks like a cell name.
         if re.match(r'^[a-zA-Z][a-zA-Z]?[a-dA-D]?[0-9]+$', name):
             warn("Name looks like a cell name in defined_name(): '%s'" % name)
+            return -1
+
+        # Warn if the name looks like a R1C1 cell reference.
+        if (re.match(r'^[rcRC]$', name)
+                or re.match(r'^[rcRC]\d+[rcRC]\d+$', name)):
+            warn("Invalid name '%s' like a RC cell ref in defined_name()"
+                 % name)
             return -1
 
         self.defined_names.append([name, sheet_index, formula, False])
@@ -297,6 +402,36 @@ class Workbook(xmlwriter.XMLwriter):
 
         """
         return self.worksheets_objs
+
+    def use_zip64(self):
+        """
+        Allow ZIP64 extensions when writing xlsx file zip container.
+
+        Args:
+            None.
+
+        Returns:
+            Nothing.
+
+        """
+        self.allow_zip64 = True
+
+    def set_vba_name(self, name=None):
+        """
+        Set the VBA name for the workbook. By default the workbook is referred
+        to as ThisWorkbook in VBA.
+
+        Args:
+            name: The VBA name for the workbook.
+
+        Returns:
+            Nothing.
+
+        """
+        if name is not None:
+            self.vba_codename = name
+        else:
+            self.vba_codename = 'ThisWorkbook'
 
     ###########################################################################
     #
@@ -342,7 +477,6 @@ class Workbook(xmlwriter.XMLwriter):
 
     def _store_workbook(self):
         # Assemble worksheets into a workbook.
-        temp_dir = tempfile.mkdtemp(dir=self.tmpdir)
         packager = Packager()
 
         # Add a default worksheet if non have been added.
@@ -374,43 +508,87 @@ class Workbook(xmlwriter.XMLwriter):
         # Add cached data to charts.
         self._add_chart_data()
 
+        # Prepare the worksheet tables.
+        self._prepare_tables()
+
         # Package the workbook.
         packager._add_workbook(self)
-        packager._set_package_dir(temp_dir)
-        packager._create_package()
+        packager._set_tmpdir(self.tmpdir)
+        packager._set_in_memory(self.in_memory)
+        xml_files = packager._create_package()
 
         # Free up the Packager object.
         packager = None
 
-        xlsx_file = ZipFile(self.filename, "w", compression=ZIP_DEFLATED)
+        xlsx_file = ZipFile(self.filename, "w", compression=ZIP_DEFLATED,
+                            allowZip64=self.allow_zip64)
 
-        # Add separator to temp dir so we have a root to strip from paths.
-        dir_root = os.path.join(temp_dir, '')
+        # Add XML sub-files to the Zip file with their Excel filename.
+        for os_filename, xml_filename, is_binary in xml_files:
+            if self.in_memory:
+                # The files are in-memory StringIOs.
+                if is_binary:
+                    xlsx_file.writestr(xml_filename, os_filename.getvalue())
+                else:
+                    xlsx_file.writestr(xml_filename,
+                                       os_filename.getvalue().encode('utf-8'))
+            else:
+                # The files are tempfiles.
+                xlsx_file.write(os_filename, xml_filename)
+                os.remove(os_filename)
 
-        # Iterate through files in the temp dir and add them to the xlsx file.
-        for dirpath, _, filenames in os.walk(temp_dir):
-            for name in filenames:
-                abs_filename = os.path.join(dirpath, name)
-                rel_filename = abs_filename.replace(dir_root, '')
-                xlsx_file.write(abs_filename, rel_filename)
-
-        shutil.rmtree(temp_dir)
         xlsx_file.close()
 
-    def _check_sheetname(self, sheetname, is_chart=False):
+    def _add_sheet(self, name, is_chartsheet):
+        # Utility for shared code in add_worksheet() and add_chartsheet().
+
+        sheet_index = len(self.worksheets_objs)
+        name = self._check_sheetname(name, is_chartsheet)
+
+        # Initialisation data to pass to the worksheet.
+        init_data = {
+            'name': name,
+            'index': sheet_index,
+            'str_table': self.str_table,
+            'worksheet_meta': self.worksheet_meta,
+            'optimization': self.optimization,
+            'tmpdir': self.tmpdir,
+            'date_1904': self.date_1904,
+            'strings_to_numbers': self.strings_to_numbers,
+            'strings_to_formulas': self.strings_to_formulas,
+            'strings_to_urls': self.strings_to_urls,
+            'nan_inf_to_errors': self.nan_inf_to_errors,
+            'default_date_format': self.default_date_format,
+            'default_url_format': self.default_url_format,
+            'excel2003_style': self.excel2003_style,
+        }
+
+        if is_chartsheet:
+            worksheet = Chartsheet()
+        else:
+            worksheet = Worksheet()
+
+        worksheet._initialize(init_data)
+
+        self.worksheets_objs.append(worksheet)
+        self.sheetnames.append(name)
+
+        return worksheet
+
+    def _check_sheetname(self, sheetname, is_chartsheet=False):
         # Check for valid worksheet names. We check the length, if it contains
         # any invalid chars and if the sheetname is unique in the workbook.
         invalid_char = re.compile(r'[\[\]:*?/\\]')
 
         # Increment the Sheet/Chart number used for default sheet names below.
-        if is_chart:
+        if is_chartsheet:
             self.chartname_count += 1
         else:
             self.sheetname_count += 1
 
         # Supply default Sheet/Chart sheetname if none has been defined.
         if sheetname is None:
-            if is_chart:
+            if is_chartsheet:
                 sheetname = self.chart_name + str(self.chartname_count)
             else:
                 sheetname = self.sheet_name + str(self.sheetname_count)
@@ -483,8 +661,19 @@ class Workbook(xmlwriter.XMLwriter):
             self.dxf_formats[index] = dxf_format
 
     def _set_default_xf_indices(self):
-        # Set the default index for each format. Mainly used for testing.
-        for xf_format in self.formats:
+        # Set the default index for each format. Only used for testing.
+
+        formats = list(self.formats)
+
+        # Delete the default url format.
+        del formats[1]
+
+        # Skip the default date format if set.
+        if self.default_date_format is not None:
+            del formats[1]
+
+        # Set the remaining formats.
+        for xf_format in formats:
             xf_format._get_xf_index()
 
     def _prepare_fonts(self):
@@ -517,28 +706,18 @@ class Workbook(xmlwriter.XMLwriter):
                 xf_format.has_dxf_font = 1
 
     def _prepare_num_formats(self):
-        # User records is not None start from index 0xA4.
+        # User defined records in Excel start from index 0xA4.
         num_formats = {}
         index = 164
         num_format_count = 0
 
-        is_number = re.compile(r'^\d+$')
-        is_zeroes = re.compile(r'^0+\d')
-
         for xf_format in (self.xf_formats + self.dxf_formats):
             num_format = xf_format.num_format
-            # Check if num_format is an index to a built-in number format.
-            # Also check for a string of zeros, which is a valid number
-            # format string but would evaluate to zero.
 
-            try:
-                if (is_number.match(str(num_format))
-                        and not is_zeroes.match(str(num_format))):
-                    # Index to a built-in number xf_format.
-                    xf_format.num_format_index = int(num_format)
-                    continue
-            except (TypeError, UnicodeEncodeError):
-                pass
+            # Check if num_format is an index to a built-in number format.
+            if not isinstance(num_format, str_types):
+                xf_format.num_format_index = int(num_format)
+                continue
 
             if num_format in num_formats:
                 # Number xf_format has already been used.
@@ -600,7 +779,7 @@ class Workbook(xmlwriter.XMLwriter):
 
         # Store the DXF colours separately since them may be reversed below.
         for xf_format in self.dxf_formats:
-            if (xf_format.pattern or xf_format.bg_color or xf_format.fg_color):
+            if xf_format.pattern or xf_format.bg_color or xf_format.fg_color:
                 xf_format.has_dxf_fill = 1
                 xf_format.dxf_bg_color = xf_format.bg_color
                 xf_format.dxf_fg_color = xf_format.fg_color
@@ -704,9 +883,10 @@ class Workbook(xmlwriter.XMLwriter):
 
             name_list.append(defined_name + "::" + sheet_name)
 
-        # Remove the extra key for sorting.
+        # Sort based on the normalised key.
         names.sort(key=operator.itemgetter(4))
 
+        # Remove the extra key used for sorting.
         for name_list in names:
             name_list.pop()
 
@@ -717,50 +897,108 @@ class Workbook(xmlwriter.XMLwriter):
         chart_ref_id = 0
         image_ref_id = 0
         drawing_id = 0
+        x_dpi = 96
+        y_dpi = 96
 
         for sheet in self.worksheets():
             chart_count = len(sheet.charts)
             image_count = len(sheet.images)
             shape_count = len(sheet.shapes)
 
-            if not (chart_count + image_count + shape_count):
+            header_image_count = len(sheet.header_images)
+            footer_image_count = len(sheet.footer_images)
+            has_drawing = False
+
+            if not (chart_count or image_count or shape_count
+                    or header_image_count or footer_image_count):
                 continue
 
-            drawing_id += 1
+            # Don't increase the drawing_id header/footer images.
+            if chart_count or image_count or shape_count:
+                drawing_id += 1
+                has_drawing = True
 
+            # Prepare the worksheet charts.
             for index in range(chart_count):
                 chart_ref_id += 1
                 sheet._prepare_chart(index, chart_ref_id, drawing_id)
 
+            # Prepare the worksheet images.
             for index in range(image_count):
                 filename = sheet.images[index][2]
-                (image_type, width, height, name) = \
-                    self._get_image_properties(filename)
+                image_data = sheet.images[index][10]
+                (image_type, width, height, name, x_dpi, y_dpi) = \
+                    self._get_image_properties(filename, image_data)
                 image_ref_id += 1
 
                 sheet._prepare_image(index, image_ref_id, drawing_id, width,
-                                     height, name, image_type)
+                                     height, name, image_type, x_dpi, y_dpi)
 
-            # for index in range(shape_count):
-            #    sheet._prepare_shape(index, drawing_id)
+            # Prepare the worksheet shapes.
+            for index in range(shape_count):
+                sheet._prepare_shape(index, drawing_id)
 
-            drawing = sheet.drawing
-            self.drawings.append(drawing)
+            # Prepare the header images.
+            for index in range(header_image_count):
+
+                filename = sheet.header_images[index][0]
+                image_data = sheet.header_images[index][1]
+                position = sheet.header_images[index][2]
+
+                (image_type, width, height, name, x_dpi, y_dpi) = \
+                    self._get_image_properties(filename, image_data)
+
+                image_ref_id += 1
+
+                sheet._prepare_header_image(image_ref_id, width, height,
+                                            name, image_type, position,
+                                            x_dpi, y_dpi)
+
+            # Prepare the footer images.
+            for index in range(footer_image_count):
+
+                filename = sheet.footer_images[index][0]
+                image_data = sheet.footer_images[index][1]
+                position = sheet.footer_images[index][2]
+
+                (image_type, width, height, name, x_dpi, y_dpi) = \
+                    self._get_image_properties(filename, image_data)
+
+                image_ref_id += 1
+
+                sheet._prepare_header_image(image_ref_id, width, height,
+                                            name, image_type, position,
+                                            x_dpi, y_dpi)
+
+            if has_drawing:
+                drawing = sheet.drawing
+                self.drawings.append(drawing)
+
+        # Remove charts that were created but not inserted into worksheets.
+        for chart in self.charts[:]:
+            if chart.id == -1:
+                self.charts.remove(chart)
 
         # Sort the workbook charts references into the order that the were
-        # written from the worksheets above.
+        # written to the worksheets above.
         self.charts = sorted(self.charts, key=lambda chart: chart.id)
 
         self.drawing_count = drawing_id
 
-    def _get_image_properties(self, filename):
+    def _get_image_properties(self, filename, image_data):
         # Extract dimension information from the image file.
         height = 0
         width = 0
+        x_dpi = 96
+        y_dpi = 96
 
-        # Open the image file and read in the data.
-        fh = open(filename, "rb")
-        data = fh.read()
+        if not image_data:
+            # Open the image file and read in the data.
+            fh = open(filename, "rb")
+            data = fh.read()
+        else:
+            # Read the image data from the user supplied byte stream.
+            data = image_data.getvalue()
 
         # Get the image filename without the path.
         image_name = os.path.basename(filename)
@@ -768,82 +1006,146 @@ class Workbook(xmlwriter.XMLwriter):
         # Look for some common image file markers.
         marker1 = (unpack('3s', data[1:4]))[0]
         marker2 = (unpack('>H', data[:2]))[0]
-        marker3 = (unpack('4s', data[6:10]))[0]
-        marker4 = (unpack('2s', data[:2]))[0]
+        marker3 = (unpack('2s', data[:2]))[0]
 
-        if marker1 == b'PNG':
+        if sys.version_info < (2, 6, 0):
+            # Python 2.5/Jython.
+            png_marker = 'PNG'
+            bmp_marker = 'BM'
+        else:
+            # Eval the binary literals for Python 2.5/Jython compatibility.
+            png_marker = eval("b'PNG'")
+            bmp_marker = eval("b'BM'")
+
+        if marker1 == png_marker:
             self.image_types['png'] = 1
-            (image_type, width, height) = self._process_png(data)
+            (image_type, width, height, x_dpi, y_dpi) = self._process_png(data)
 
-        elif (marker2 == 0xFFD8 and
-              (marker3 == b'JFIF' or marker3 == b'EXIF')):
+        elif marker2 == 0xFFD8:
             self.image_types['jpeg'] = 1
-            (image_type, width, height) = self._process_jpg(data)
+            (image_type, width, height, x_dpi, y_dpi) = self._process_jpg(data)
 
-        elif (marker4 == b'BM'):
+        elif marker3 == bmp_marker:
             self.image_types['bmp'] = 1
             (image_type, width, height) = self._process_bmp(data)
 
         else:
-            raise Exception("%s: Unknown or unsupported file type." % filename)
+            raise Exception("%s: Unknown or unsupported image file format."
+                            % filename)
 
         # Check that we found the required data.
         if not height or not width:
             raise Exception("%s: no size data found in image file." % filename)
 
         # Store image data to copy it into file container.
-        self.images.append([filename, image_type])
+        self.images.append([filename, image_type, image_data])
 
-        fh.close()
-        return (image_type, width, height, image_name)
+        if not image_data:
+            fh.close()
+
+        return image_type, width, height, image_name, x_dpi, y_dpi
 
     def _process_png(self, data):
         # Extract width and height information from a PNG file.
-        width = (unpack('>I', data[16:20]))[0]
-        height = (unpack('>I', data[20:24]))[0]
+        offset = 8
+        data_length = len(data)
+        end_marker = False
+        width = 0
+        height = 0
+        x_dpi = 96
+        y_dpi = 96
 
-        return ('png', width, height)
+        # Look for numbers rather than strings for Python 2.6/3 compatibility.
+        marker_ihdr = 0x49484452  # IHDR
+        marker_phys = 0x70485973  # pHYs
+        marker_iend = 0X49454E44  # IEND
+
+        # Search through the image data to read the height and width in the
+        # IHDR element. Also read the DPI in the pHYs element.
+        while not end_marker and offset < data_length:
+
+            length = (unpack('>I', data[offset + 0:offset + 4]))[0]
+            marker = (unpack('>I', data[offset + 4:offset + 8]))[0]
+
+            # Read the image dimensions.
+            if marker == marker_ihdr:
+                width = (unpack('>I', data[offset + 8:offset + 12]))[0]
+                height = (unpack('>I', data[offset + 12:offset + 16]))[0]
+
+            # Read the image DPI.
+            if marker == marker_phys:
+                x_density = (unpack('>I', data[offset + 8:offset + 12]))[0]
+                y_density = (unpack('>I', data[offset + 12:offset + 16]))[0]
+                units = (unpack('b', data[offset + 16:offset + 17]))[0]
+
+                if units == 1:
+                    x_dpi = x_density * 0.0254
+                    y_dpi = y_density * 0.0254
+
+            if marker == marker_iend:
+                end_marker = True
+                continue
+
+            offset = offset + length + 12
+
+        return 'png', width, height, x_dpi, y_dpi
 
     def _process_jpg(self, data):
         # Extract width and height information from a JPEG file.
         offset = 2
         data_length = len(data)
+        end_marker = False
+        width = 0
+        height = 0
+        x_dpi = 96
+        y_dpi = 96
 
-        # Search through the image data to find the 0xFFC0 marker.
-        # The height and width are contained in the data for that
-        # sub-element.
-        found = 0
-        while not found and offset < data_length:
+        # Search through the image data to read the height and width in the
+        # 0xFFC0/C2 element. Also read the DPI in the 0xFFE0 element.
+        while not end_marker and offset < data_length:
 
             marker = (unpack('>H', data[offset + 0:offset + 2]))[0]
             length = (unpack('>H', data[offset + 2:offset + 4]))[0]
 
+            # Read the image dimensions.
             if marker == 0xFFC0 or marker == 0xFFC2:
                 height = (unpack('>H', data[offset + 5:offset + 7]))[0]
                 width = (unpack('>H', data[offset + 7:offset + 9]))[0]
-                found = 1
+
+            # Read the image DPI.
+            if marker == 0xFFE0:
+                units = (unpack('b', data[offset + 11:offset + 12]))[0]
+                x_density = (unpack('>H', data[offset + 12:offset + 14]))[0]
+                y_density = (unpack('>H', data[offset + 14:offset + 16]))[0]
+
+                if units == 1:
+                    x_dpi = x_density
+                    y_dpi = y_density
+
+                if units == 2:
+                    x_dpi = x_density * 2.54
+                    y_dpi = y_density * 2.54
+
+            if marker == 0xFFDA:
+                end_marker = True
                 continue
 
             offset = offset + length + 2
 
-            if marker == 0xFFDA:
-                found = 1
-                continue
-
-        return ('jpeg', width, height)
+        return 'jpeg', width, height, x_dpi, y_dpi
 
     def _process_bmp(self, data):
         # Extract width and height information from a BMP file.
         width = (unpack('<L', data[18:22]))[0]
         height = (unpack('<L', data[22:26]))[0]
-        return ('bmp', width, height)
+        return 'bmp', width, height
 
     def _extract_named_ranges(self, defined_names):
         # Extract the named ranges from the sorted list of defined names.
         # These are used in the App.xml file.
         named_ranges = []
 
-        for defined_name in (defined_names):
+        for defined_name in defined_names:
 
             name = defined_name[0]
             index = defined_name[1]
@@ -877,36 +1179,55 @@ class Workbook(xmlwriter.XMLwriter):
         else:
             return None
 
-    #
-    # Iterate through the worksheets and set up the VML objects.
-    #
     def _prepare_vml(self):
+        # Iterate through the worksheets and set up the VML objects.
         comment_id = 0
+        vml_drawing_id = 0
         vml_data_id = 1
+        vml_header_id = 0
         vml_shape_id = 1024
         vml_files = 0
         comment_files = 0
+        has_button = False
 
         for sheet in self.worksheets():
-            if not sheet.has_vml:
+            if not sheet.has_vml and not sheet.has_header_vml:
                 continue
 
             vml_files += 1
 
-            if sheet.has_comments:
-                comment_files += 1
+            if sheet.has_vml:
+                if sheet.has_comments:
+                    comment_files += 1
+                    comment_id += 1
 
-            comment_id += 1
-            count = sheet._prepare_vml_objects(vml_data_id,
-                                               vml_shape_id,
-                                               comment_id)
+                vml_drawing_id += 1
 
-            # Each VML file should start with a shape id incremented by 1024.
-            vml_data_id += 1 * int((1024 + count) / 1024)
-            vml_shape_id += 1024 * int((1024 + count) / 1024)
+                count = sheet._prepare_vml_objects(vml_data_id,
+                                                   vml_shape_id,
+                                                   vml_drawing_id,
+                                                   comment_id)
 
-        self.num_vml_files = vml_files
-        self.num_comment_files = comment_files
+                # Each VML should start with a shape id incremented by 1024.
+                vml_data_id += 1 * int((1024 + count) / 1024)
+                vml_shape_id += 1024 * int((1024 + count) / 1024)
+
+            if sheet.has_header_vml:
+                vml_header_id += 1
+                vml_drawing_id += 1
+                sheet._prepare_header_vml_objects(vml_header_id,
+                                                  vml_drawing_id)
+
+            self.num_vml_files = vml_files
+            self.num_comment_files = comment_files
+
+            if len(sheet.buttons_list):
+                has_button = True
+
+                # Set the sheet vba_codename if it has a button and the
+                # workbook has a vbaProject binary.
+                if self.vba_project and sheet.vba_codename is None:
+                    sheet.set_vba_name()
 
         # Add a font format for cell comments.
         if comment_files > 0:
@@ -914,24 +1235,49 @@ class Workbook(xmlwriter.XMLwriter):
                                   'color_indexed': 81, 'font_only': True})
             xf._get_xf_index()
 
+        # Set the workbook vba_codename if one of the sheets has a button and
+        # the workbook has a vbaProject binary.
+        if has_button and self.vba_project and self.vba_codename is None:
+            self.set_vba_name()
+
+    def _prepare_tables(self):
+        # Set the table ids for the worksheet tables.
+        table_id = 0
+
+        for sheet in self.worksheets():
+            table_count = len(sheet.tables)
+
+            if not table_count:
+                continue
+
+            sheet._prepare_tables(table_id + 1)
+            table_id += table_count
+
     def _add_chart_data(self):
         # Add "cached" data to charts to provide the numCache and strCacher
         # data for series and title/axis ranges.
         worksheets = {}
         seen_ranges = {}
+        charts = []
 
         # Map worksheet names to worksheet objects.
         for worksheet in self.worksheets():
             worksheets[worksheet.name] = worksheet
 
+        # Build a list of the worksheet charts including any combined charts.
         for chart in self.charts:
+            charts.append(chart)
+            if chart.combined:
+                charts.append(chart.combined)
+
+        for chart in charts:
 
             for c_range in chart.formula_ids.keys():
                 r_id = chart.formula_ids[c_range]
 
                 # Skip if the series has user defined data.
                 if chart.formula_data[r_id] is not None:
-                    if (not c_range in seen_ranges
+                    if (c_range not in seen_ranges
                             or seen_ranges[c_range] is None):
                         data = chart.formula_data[r_id]
                         seen_ranges[c_range] = data
@@ -949,11 +1295,22 @@ class Workbook(xmlwriter.XMLwriter):
                 if sheetname is None:
                     continue
 
-                # Die if the name is unknown since it indicates a user error in
-                # a chart series formula.
-                if not sheetname in worksheets:
+                # Handle non-contiguous ranges like:
+                #     (Sheet1!$A$1:$A$2,Sheet1!$A$4:$A$5).
+                # We don't try to parse them. We just return an empty list.
+                if sheetname.startswith('('):
+                    chart.formula_data[r_id] = []
+                    seen_ranges[c_range] = []
+                    continue
+
+                # Warn if the name is unknown since it indicates a user error
+                # in a chart series formula.
+                if sheetname not in worksheets:
                     warn("Unknown worksheet reference '%s' in range "
                          "'%s' passed to add_series()" % (sheetname, c_range))
+                    chart.formula_data[r_id] = []
+                    seen_ranges[c_range] = []
+                    continue
 
                 # Find the worksheet object based on the sheet name.
                 worksheet = worksheets[sheetname]
@@ -961,10 +1318,7 @@ class Workbook(xmlwriter.XMLwriter):
                 # Get the data from the worksheet table.
                 data = worksheet._get_range_data(*cells)
 
-                # TODO
-                #   # Ignore rich strings for now. Deparse later if necessary.
-                #        if token =~ m{^<r>} and token =~ m{</r>$}:
-                #            token = ''
+                # TODO. Handle SST string ids if required.
 
                 # Add the data to the chart.
                 chart.formula_data[r_id] = data
@@ -977,16 +1331,16 @@ class Workbook(xmlwriter.XMLwriter):
         # and cell range such as ( 'Sheet1', 0, 1, 4, 1 ).
 
         # Split the range formula into sheetname and cells at the last '!'.
-        # TODO. Fix this to match from right.
-        pos = c_range.find('!')
+        pos = c_range.rfind('!')
         if pos > 0:
-            sheetname, cells = c_range.split('!')
+            sheetname = c_range[:pos]
+            cells = c_range[pos + 1:]
         else:
-            return None
+            return None, None
 
         # Split the cell range into 2 cells or else use single cell for both.
         if cells.find(':') > 0:
-            (cell_1, cell_2) = cells.split(':')
+            (cell_1, cell_2) = cells.split(':', 1)
         else:
             (cell_1, cell_2) = (cells, cells)
 
@@ -997,11 +1351,11 @@ class Workbook(xmlwriter.XMLwriter):
         (row_start, col_start) = xl_cell_to_rowcol(cell_1)
         (row_end, col_end) = xl_cell_to_rowcol(cell_2)
 
-        # Check that we have a 1D range only.
+        # We only handle 1D ranges.
         if row_start != row_end and col_start != col_end:
-            return None
+            return None, None
 
-        return (sheetname, [row_start, col_start, row_end, col_end])
+        return sheetname, [row_start, col_start, row_end, col_end]
 
     def _prepare_sst_string_data(self):
         # Convert the SST string data from a dict to a list.
@@ -1119,10 +1473,16 @@ class Workbook(xmlwriter.XMLwriter):
 
     def _write_calc_pr(self):
         # Write the <calcPr> element.
+        attributes = [('calcId', self.calc_id)]
 
-        calc_id = '124519'
+        if self.calc_mode == 'manual':
+            attributes.append(('calcMode', self.calc_mode))
+            attributes.append(('calcOnSave', "0"))
+        elif self.calc_mode == 'autoNoTable':
+            attributes.append(('calcMode', self.calc_mode))
 
-        attributes = [('calcId', calc_id)]
+        if self.calc_on_load:
+            attributes.append(('fullCalcOnLoad', '1'))
 
         self._xml_empty_tag('calcPr', attributes)
 
@@ -1133,7 +1493,7 @@ class Workbook(xmlwriter.XMLwriter):
 
         self._xml_start_tag('definedNames')
 
-        for defined_name in (self.defined_names):
+        for defined_name in self.defined_names:
             self._write_defined_name(defined_name)
 
         self._xml_end_tag('definedNames')
@@ -1159,11 +1519,10 @@ class Workbook(xmlwriter.XMLwriter):
 class WorksheetMeta(object):
     """
     A class to track worksheets data such as the active sheet and the
-    first sheet..
+    first sheet.
 
     """
 
     def __init__(self):
         self.activesheet = 0
         self.firstsheet = 0
-        self.table_count = 0

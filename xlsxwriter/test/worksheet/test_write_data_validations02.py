@@ -2,12 +2,12 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
 import unittest
 from datetime import date, time
-from ..compatibility import StringIO
+from ...compatibility import StringIO
 from ...worksheet import Worksheet
 from ..helperfunctions import _xml_to_list
 
@@ -923,6 +923,3 @@ class TestWriteDataValidations(unittest.TestCase):
         got = _xml_to_list(got)
 
         self.assertEqual(got, exp)
-
-if __name__ == '__main__':
-    unittest.main()

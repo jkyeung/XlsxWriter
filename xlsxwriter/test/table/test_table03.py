@@ -2,11 +2,11 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
 import unittest
-from ..compatibility import StringIO
+from ...compatibility import StringIO
 from ..helperfunctions import _xml_to_list
 from ...table import Table
 from ...worksheet import Worksheet
@@ -32,6 +32,7 @@ class TestAssembleTable(unittest.TestCase):
                                        'last_column': 1,
                                        'banded_columns': 1
                                        })
+        worksheet._prepare_tables(1)
 
         fh = StringIO()
         table = Table()
@@ -56,7 +57,3 @@ class TestAssembleTable(unittest.TestCase):
         got = _xml_to_list(fh.getvalue())
 
         self.assertEqual(got, exp)
-
-
-if __name__ == '__main__':
-    unittest.main()

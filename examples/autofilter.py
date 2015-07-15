@@ -6,7 +6,7 @@
 # range of worksheet data. This allows users to filter the data based on
 # simple criteria so that some data is shown and some is hidden.
 #
-# Copyright 2013, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 import xlsxwriter
 
@@ -35,6 +35,14 @@ data = []
 for line in textfile:
     # Split the input data based on whitespace.
     row_data = line.strip("\n").split()
+
+    # Convert the number data from the text file.
+    for i, item in enumerate(row_data):
+        try:
+            row_data[i] = float(item)
+        except ValueError:
+            pass
+
     data.append(row_data)
 
 

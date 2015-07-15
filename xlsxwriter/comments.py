@@ -2,7 +2,7 @@
 #
 # Comments - A class for writing the Excel XLSX Worksheet file.
 #
-# Copyright 2013, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
 import re
@@ -79,10 +79,10 @@ class Comments(xmlwriter.XMLwriter):
 
         self._xml_start_tag('authors')
 
-        for comment in (comment_data):
+        for comment in comment_data:
             author = comment[3]
 
-            if author is not None and not author in self.author_ids:
+            if author is not None and author not in self.author_ids:
                 # Store the author id.
                 self.author_ids[author] = author_count
                 author_count += 1
@@ -100,7 +100,7 @@ class Comments(xmlwriter.XMLwriter):
         # Write the <commentList> element.
         self._xml_start_tag('commentList')
 
-        for comment in (comment_data):
+        for comment in comment_data:
             row = comment[0]
             col = comment[1]
             text = comment[2]

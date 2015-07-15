@@ -2,16 +2,14 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
-import unittest
-import os
+from ..excel_comparsion_test import ExcelComparisonTest
 from ...workbook import Workbook
-from ..helperfunctions import _compare_xlsx_files
 
 
-class TestCompareXLSXFiles(unittest.TestCase):
+class TestCompareXLSXFiles(ExcelComparisonTest):
     """
     Test file created by XlsxWriter against a file created by Excel.
 
@@ -31,11 +29,8 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
     def test_create_file(self):
         """Test worksheet selection and activation."""
-        filename = self.got_filename
 
-        ####################################################
-
-        workbook = Workbook(filename)
+        workbook = Workbook(self.got_filename)
 
         worksheet1 = workbook.add_worksheet()
         worksheet2 = workbook.add_worksheet('Data Sheet')
@@ -58,20 +53,32 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
         workbook.close()
 
-        ####################################################
+        self.assertExcelEqual()
 
-        got, exp = _compare_xlsx_files(self.got_filename,
-                                       self.exp_filename,
-                                       self.ignore_files,
-                                       self.ignore_elements)
+    def test_create_file_in_memory(self):
+        """Test worksheet selection and activation."""
 
-        self.assertEqual(got, exp)
+        workbook = Workbook(self.got_filename, {'in_memory': True})
 
-    def tearDown(self):
-        # Cleanup.
-        if os.path.exists(self.got_filename):
-            os.remove(self.got_filename)
+        worksheet1 = workbook.add_worksheet()
+        worksheet2 = workbook.add_worksheet('Data Sheet')
+        worksheet3 = workbook.add_worksheet()
 
+        bold = workbook.add_format({'bold': 1})
 
-if __name__ == '__main__':
-    unittest.main()
+        worksheet1.write('A1', 'Foo')
+        worksheet1.write('A2', 123)
+
+        worksheet3.write('B2', 'Foo')
+        worksheet3.write('B3', 'Bar', bold)
+        worksheet3.write('C4', 234)
+
+        worksheet2.activate()
+
+        worksheet2.select()
+        worksheet3.select()
+        worksheet3.activate()
+
+        workbook.close()
+
+        self.assertExcelEqual()

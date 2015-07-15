@@ -2,7 +2,7 @@
 #
 # Styles - A class for writing the Excel XLSX Worksheet file.
 #
-# Copyright 2013, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
 # Package imports.
@@ -244,7 +244,10 @@ class Styles(xmlwriter.XMLwriter):
         if not is_dxf_format:
             self._xml_empty_tag('sz', [('val', xf_format.font_size)])
 
-        if xf_format.theme:
+        if xf_format.theme == -1:
+            # Ignore for excel2003_style.
+            pass
+        elif xf_format.theme:
             self._write_color('theme', xf_format.theme)
         elif xf_format.color_indexed:
             self._write_color('indexed', xf_format.color_indexed)
@@ -256,7 +259,9 @@ class Styles(xmlwriter.XMLwriter):
 
         if not is_dxf_format:
             self._xml_empty_tag('name', [('val', xf_format.font_name)])
-            self._xml_empty_tag('family', [('val', xf_format.font_family)])
+
+            if xf_format.font_family:
+                self._xml_empty_tag('family', [('val', xf_format.font_family)])
 
             if xf_format.font_name == 'Calibri' and not xf_format.hyperlink:
                 self._xml_empty_tag(
@@ -619,7 +624,7 @@ class Styles(xmlwriter.XMLwriter):
             for xf_format in self.dxf_formats:
                 self._xml_start_tag('dxf')
                 if xf_format.has_dxf_font:
-                    self._write_font(xf_format, 1)
+                    self._write_font(xf_format, True)
 
                 if xf_format.num_format_index:
                     self._write_num_fmt(xf_format.num_format_index,

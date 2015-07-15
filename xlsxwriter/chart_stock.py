@@ -2,7 +2,7 @@
 #
 # ChartStock - A class for writing the Excel XLSX Stock charts.
 #
-# Copyright 2013, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
 from . import chart
@@ -32,10 +32,23 @@ class ChartStock(chart.Chart):
 
         self.show_crosses = 0
         self.hi_low_lines = {}
+        self.date_category = True
 
         # Override and reset the default axis values.
         self.x_axis['defaults']['num_format'] = 'dd/mm/yyyy'
         self.x2_axis['defaults']['num_format'] = 'dd/mm/yyyy'
+
+        # Set the available data label positions for this chart type.
+        self.label_position_default = 'right'
+        self.label_positions = {
+            'center': 'ctr',
+            'right': 'r',
+            'left': 'l',
+            'above': 't',
+            'below': 'b',
+            # For backward compatibility.
+            'top': 't',
+            'bottom': 'b'}
 
         self.set_x_axis({})
         self.set_x2_axis({})
@@ -58,8 +71,8 @@ class ChartStock(chart.Chart):
     ###########################################################################
 
     def _write_stock_chart(self, args):
-    # Write the <c:stockChart> element.
-    # Overridden to add hi_low_lines().
+        # Write the <c:stockChart> element.
+        # Overridden to add hi_low_lines().
 
         if args['primary_axes']:
             series = self._get_primary_axes_series()
@@ -95,47 +108,6 @@ class ChartStock(chart.Chart):
         self._write_axis_ids(args)
 
         self._xml_end_tag('c:stockChart')
-
-    def _write_plot_area(self):
-        # Overridden to use _write_date_axis() instead of _write_cat_axis().
-        self._xml_start_tag('c:plotArea')
-
-        # Write the c:layout element.
-        self._write_layout()
-
-        # Write the subclass chart elements for primary and secondary axes.
-        self._write_chart_type({'primary_axes': 1})
-        self._write_chart_type({'primary_axes': 0})
-
-        # Write c:catAx and c:valAx elements for series using primary axes.
-        self._write_date_axis({'x_axis': self.x_axis,
-                               'y_axis': self.y_axis,
-                               'axis_ids': self.axis_ids
-                               })
-
-        self._write_val_axis({'x_axis': self.x_axis,
-                              'y_axis': self.y_axis,
-                              'axis_ids': self.axis_ids
-                              })
-
-        # Write c:valAx and c:catAx elements for series using secondary axes.
-        self._write_val_axis({'x_axis': self.x2_axis,
-                              'y_axis': self.y2_axis,
-                              'axis_ids': self.axis2_ids
-                              })
-
-        self._write_date_axis({'x_axis': self.x2_axis,
-                               'y_axis': self.y2_axis,
-                               'axis_ids': self.axis2_ids
-                               })
-
-        # Write the c:dTable element.
-        self._write_d_table()
-
-        # Write the c:spPr element for the plotarea formatting.
-        self._write_sp_pr(self.plotarea)
-
-        self._xml_end_tag('c:plotArea')
 
     def _modify_series_formatting(self):
         # Add default formatting to the series data.

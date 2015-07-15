@@ -2,11 +2,11 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
 import unittest
-from ..compatibility import StringIO
+from ...compatibility import StringIO
 from ...drawing import Drawing
 
 
@@ -31,6 +31,10 @@ class TestWriteXdrcNvPr(unittest.TestCase):
 
         self.assertEqual(got, exp)
 
+        options = {'url': 'https://www.github.com', 'tip': 'tip'}
+        self.drawing._write_c_nv_pr(2, 'Chart 1', options)
 
-if __name__ == '__main__':
-    unittest.main()
+        exp = """<xdr:cNvPr id="2" name="Chart 1"/><xdr:cNvPr id="2" name="Chart 1"><a:hlinkClick xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId1" tooltip="tip"/></xdr:cNvPr>"""
+        got = self.fh.getvalue()
+
+        self.assertEqual(got, exp)

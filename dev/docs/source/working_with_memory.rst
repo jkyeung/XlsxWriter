@@ -1,24 +1,13 @@
-.. _memory_perf: 
+.. _memory_perf:
 
 Working with Memory and Performance
 ===================================
 
-The Python XlsxWriter module is based on the design of the Perl module
-:ref:`Excel::Writer::XLSX <ewx>` which in turn is based on an older Perl
-module called
-`Spreadsheet::WriteExcel <http://search.cpan.org/~jmcnamara/Spreadsheet-WriteExcel/>`_.
+By default XlsxWriter holds all cell data in memory. This is to allow future
+features when formatting is applied separately from the data.
 
-Spreadsheet::WriteExcel was written to optimise speed and reduce memory usage.
-However, these design goals meant that it wasn't easy to implement features
-that many users requested such as writing formatting and data separately.
-
-As a result XlsxWriter (and Excel::Writer::XLSX) takes a different design
-approach and holds a lot more data in memory so that it is functionally more
-flexible.
-
-The effect of this is that XlsxWriter can consume a lot of memory. In addition
-the extended row and column ranges in Excel 2007+ mean that it is possible to
-run out of memory creating large files.
+The effect of this is that XlsxWriter can consume a lot of memory and it is
+possible to run out of memory when creating large files.
 
 Fortunately, this memory usage can be reduced almost completely by using the
 :func:`Workbook` ``'constant_memory'`` property::
@@ -70,19 +59,19 @@ increase more of less linearly with the number of rows:
 +-------+---------+----------+----------------+
 | Rows  | Columns | Time (s) | Memory (bytes) |
 +=======+=========+==========+================+
-| 200   | 50      | 0.65     | 2050552        |
+| 200   | 50      | 0.43     | 2346728        |
 +-------+---------+----------+----------------+
-| 400   | 50      | 1.32     | 4478272        |
+| 400   | 50      | 0.84     | 4670904        |
 +-------+---------+----------+----------------+
-| 800   | 50      | 2.64     | 8083072        |
+| 800   | 50      | 1.68     | 8325928        |
 +-------+---------+----------+----------------+
-| 1600  | 50      | 5.31     | 17799424       |
+| 1600  | 50      | 3.39     | 17855192       |
 +-------+---------+----------+----------------+
-| 3200  | 50      | 10.74    | 32218624       |
+| 3200  | 50      | 6.82     | 32279672       |
 +-------+---------+----------+----------------+
-| 6400  | 50      | 21.63    | 64792576       |
+| 6400  | 50      | 13.66    | 64862232       |
 +-------+---------+----------+----------------+
-| 12800 | 50      | 43.49    | 128760832      |
+| 12800 | 50      | 27.60    | 128851880      |
 +-------+---------+----------+----------------+
 
 XlsxWriter in ``constant_memory`` mode: the execution time still increases
@@ -92,27 +81,58 @@ constant:
 +-------+---------+----------+----------------+
 | Rows  | Columns | Time (s) | Memory (bytes) |
 +=======+=========+==========+================+
-| 200   | 50      | 0.35     | 54248          |
+| 200   | 50      | 0.37     | 62208          |
 +-------+---------+----------+----------------+
-| 400   | 50      | 0.69     | 54248          |
+| 400   | 50      | 0.74     | 62208          |
 +-------+---------+----------+----------------+
-| 800   | 50      | 1.36     | 54248          |
+| 800   | 50      | 1.46     | 62208          |
 +-------+---------+----------+----------------+
-| 1600  | 50      | 2.74     | 54248          |
+| 1600  | 50      | 2.93     | 62208          |
 +-------+---------+----------+----------------+
-| 3200  | 50      | 5.46     | 54248          |
+| 3200  | 50      | 5.90     | 62208          |
 +-------+---------+----------+----------------+
-| 6400  | 50      | 10.99    | 54248          |
+| 6400  | 50      | 11.84    | 62208          |
 +-------+---------+----------+----------------+
-| 12800 | 50      | 21.82    | 54248          |
+| 12800 | 50      | 23.63    | 62208          |
 +-------+---------+----------+----------------+
 
-In the ``constant_memory`` mode the performance is also increased. There will
-be further optimisation in both modes in later releases.
+In the ``constant_memory`` mode the performance is also increased slightly.
 
 These figures were generated using programs in the ``dev/performance``
-directory of the XlsxWriter source code.
+directory of the XlsxWriter repo.
 
 
+Benchmark of Python Excel Writers
+---------------------------------
+
+If you wish to compare the performance of different Python Excel writing
+modules there is a progam called `bench_excel_writers.py
+<https://raw.githubusercontent.com/jmcnamara/XlsxWriter/master/dev/performance/bench_excel_writers.py>`_
+in the ``dev/performance`` directory of the XlsxWriter repo.
+
+And here is the output for 10,000 rows x 50 columns using the latest version
+of the modules at the time of writing::
+
+    Versions:
+        python      : 2.7.2
+        openpyxl    : 2.2.1
+        pyexcelerate: 0.6.6
+        xlsxwriter  : 0.7.2
+        xlwt        : 1.0.0
+
+    Dimensions:
+        Rows = 10000
+        Cols = 50
+
+    Times:
+        pyexcelerate          :  10.63
+        xlwt                  :  16.93
+        xlsxwriter (optimised):  20.37
+        xlsxwriter            :  24.24
+        openpyxl   (optimised):  26.63
+        openpyxl              :  35.75
 
 
+As with any benchmark the results will depend on Python/module versions, CPU,
+RAM and Disk I/O and on the benchmark itself. So make sure to verify these
+results for your own setup.

@@ -2,9 +2,10 @@
 #
 # ChartPie - A class for writing the Excel XLSX Pie charts.
 #
-# Copyright 2013, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
+from warnings import warn
 from . import chart
 
 
@@ -32,6 +33,37 @@ class ChartPie(chart.Chart):
             options = {}
 
         self.vary_data_color = 1
+        self.rotation = 0
+
+        # Set the available data label positions for this chart type.
+        self.label_position_default = 'best_fit'
+        self.label_positions = {
+            'center': 'ctr',
+            'inside_end': 'inEnd',
+            'outside_end': 'outEnd',
+            'best_fit': 'bestFit'}
+
+    def set_rotation(self, rotation):
+        """
+        Set the Pie/Doughnut chart rotation: the angle of the first slice.
+
+        Args:
+            rotation: First segment angle: 0 <= rotation <= 360.
+
+        Returns:
+            Nothing.
+
+        """
+        if rotation is None:
+            return
+
+        # Ensure the rotation is in Excel's range.
+        if rotation < 0 or rotation > 360:
+            warn("Chart rotation %d outside Excel range: 0 <= rotation <= 360"
+                 % rotation)
+            return
+
+        self.rotation = int(rotation)
 
     ###########################################################################
     #
@@ -76,7 +108,7 @@ class ChartPie(chart.Chart):
         self._xml_start_tag('c:plotArea')
 
         # Write the c:layout element.
-        self._write_layout()
+        self._write_layout(self.plotarea.get('layout'), 'plot')
 
         # Write the subclass chart type element.
         self._write_chart_type(None)
@@ -88,9 +120,16 @@ class ChartPie(chart.Chart):
         # Write the <c:legend> element.
 
         position = self.legend_position
+        font = self.legend_font
+        delete_series = []
         overlay = 0
 
-        if 'overlay' in position:
+        if (self.legend_delete_series is not None
+                and type(self.legend_delete_series) is list):
+            delete_series = self.legend_delete_series
+
+        if position.startswith('overlay_'):
+            position = position.replace('overlay_', '')
             overlay = 1
 
         allowed = {
@@ -103,7 +142,7 @@ class ChartPie(chart.Chart):
         if position == 'none':
             return
 
-        if not position in allowed:
+        if position not in allowed:
             return
 
         position = allowed[position]
@@ -113,56 +152,65 @@ class ChartPie(chart.Chart):
         # Write the c:legendPos element.
         self._write_legend_pos(position)
 
+        # Remove series labels from the legend.
+        for index in delete_series:
+            # Write the c:legendEntry element.
+            self._write_legend_entry(index)
+
         # Write the c:layout element.
-        self._write_layout()
+        self._write_layout(self.legend_layout, 'legend')
 
         # Write the c:overlay element.
         if overlay:
             self._write_overlay()
 
         # Write the c:txPr element. Over-ridden.
-        self._write_tx_pr_legend()
+        self._write_tx_pr_legend(None, font)
 
         self._xml_end_tag('c:legend')
 
-    def _write_tx_pr_legend(self):
+    def _write_tx_pr_legend(self, horiz, font):
         # Write the <c:txPr> element for legends.
-        horiz = 0
+
+        if font and font.get('rotation'):
+            rotation = font['rotation']
+        else:
+            rotation = None
 
         self._xml_start_tag('c:txPr')
 
         # Write the a:bodyPr element.
-        self._write_a_body_pr(horiz)
+        self._write_a_body_pr(rotation, horiz)
 
         # Write the a:lstStyle element.
         self._write_a_lst_style()
 
         # Write the a:p element.
-        self._write_a_p_legend()
+        self._write_a_p_legend(font)
 
         self._xml_end_tag('c:txPr')
 
-    def _write_a_p_legend(self):
+    def _write_a_p_legend(self, font):
         # Write the <a:p> element for legends.
 
         self._xml_start_tag('a:p')
 
         # Write the a:pPr element.
-        self._write_a_p_pr_legend()
+        self._write_a_p_pr_legend(font)
 
         # Write the a:endParaRPr element.
         self._write_a_end_para_rpr()
 
         self._xml_end_tag('a:p')
 
-    def _write_a_p_pr_legend(self):
+    def _write_a_p_pr_legend(self, font):
         # Write the <a:pPr> element for legends.
         attributes = [('rtl', 0)]
 
         self._xml_start_tag('a:pPr', attributes)
 
         # Write the a:defRPr element.
-        self._write_a_def_rpr(None)
+        self._write_a_def_rpr(font)
 
         self._xml_end_tag('a:pPr')
 
@@ -174,6 +222,6 @@ class ChartPie(chart.Chart):
 
     def _write_first_slice_ang(self):
         # Write the <c:firstSliceAng> element.
-        attributes = [('val', 0)]
+        attributes = [('val', self.rotation)]
 
         self._xml_empty_tag('c:firstSliceAng', attributes)

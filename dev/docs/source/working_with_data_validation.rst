@@ -26,7 +26,7 @@ message is displayed:
 
 .. image:: _images/data_validate2.png
 
-    
+
 For more information on data validation see the Microsoft support article
 "Description and examples of data validation in Excel":
 http://support.microsoft.com/kb/211485.
@@ -98,7 +98,7 @@ validate
 ********
 
 The ``validate`` parameter is used to set the type of data that you wish to
-validate:: 
+validate::
 
     worksheet.data_validation('A1', {'validate': 'integer',
                                      'criteria': '>',
@@ -119,8 +119,7 @@ It is always required and it has no default value. Allowable values are::
   'whole number'.
 * **decimal**: restricts the cell to decimal values.
 * **list**: restricts the cell to a set of user specified values. These can
-  be passed in a Python list or as an Excel cell range. Excel requires that
-  range references are restricted to cells on the same worksheet.
+  be passed in a Python list or as an Excel cell range.
 * **date**: restricts the cell to date values specified as a datetime object
   as shown in :ref:`working_with_dates_and_time`.
 * **time**: restricts the cell to time values specified as a datetime object
@@ -148,23 +147,23 @@ cell is validated. It is almost always required except for the ``list`` and
 
 Allowable values are:
 
-+------------------------------+-----------+--------+
-| ``between``                  |           |        |
-+------------------------------+-----------+--------+
-| ``not between``              |           |        |
-+------------------------------+-----------+--------+
-| ``equal to``                 | ``==``    | ``=``  |
-+------------------------------+-----------+--------+
-| ``not equal to``             | ``not =`` | ``<>`` |
-+------------------------------+-----------+--------+
-| ``greater than``             | ``>``     |        |
-+------------------------------+-----------+--------+
-| ``less than``                | ``<``     |        |
-+------------------------------+-----------+--------+
-| ``greater than or equal to`` | ``>=``    |        |
-+------------------------------+-----------+--------+
-| ``less than or equal to``    | ``<=``    |        |
-+------------------------------+-----------+--------+
++------------------------------+--------+
+| ``between``                  |        |
++------------------------------+--------+
+| ``not between``              |        |
++------------------------------+--------+
+| ``equal to``                 | ``==`` |
++------------------------------+--------+
+| ``not equal to``             | ``!=`` |
++------------------------------+--------+
+| ``greater than``             | ``>``  |
++------------------------------+--------+
+| ``less than``                | ``<``  |
++------------------------------+--------+
+| ``greater than or equal to`` | ``>=`` |
++------------------------------+--------+
+| ``less than or equal to``    | ``<=`` |
++------------------------------+--------+
 
 You can either use Excel's textual description strings, in the first column
 above, or the more common symbolic alternatives. The following are equivalent::
@@ -234,7 +233,7 @@ validation is not applied to blank data in the cell. It is on by default::
                                          'criteria': 'between',
                                          'minimum': 1,
                                          'maximum': 10,
-                                         'ignore_blank': 0,
+                                         'ignore_blank': False,
                                          })
 
 

@@ -2,11 +2,11 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
 import unittest
-from ..compatibility import StringIO
+from ...compatibility import StringIO
 from ...worksheet import Worksheet
 
 
@@ -324,7 +324,3 @@ class TestCalculateSpans(unittest.TestCase):
         exp = {1: '2:17', 2: '18:18'}
 
         self.assertEqual(got, exp)
-
-
-if __name__ == '__main__':
-    unittest.main()

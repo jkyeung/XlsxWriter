@@ -11,8 +11,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-# import sys
-# import os
+import sys
+import os
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -42,14 +42,14 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'XlsxWriter'
-copyright = u'2013, John McNamara'
+copyright = u'2013-2015, John McNamara'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = '0.3.5'
+version = '0.7.3'
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -95,22 +95,25 @@ intersphinx_mapping = {'http://docs.python.org/2/': None}
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+# html_theme = 'default'
+sys.path.append(os.path.abspath('_themes'))
+html_theme_path = ['_themes']
+html_theme = 'bootstrap'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-                      # 'nosidebar': True,
-                      'sidebarbgcolor': '#F2F2F2',
-                      'relbarbgcolor': '#9CB640',
-                      'linkcolor': '#9CB640',
-                      'sidebarlinkcolor': '#9CB640',
-                      'footerbgcolor': '#FFFFFF',
-                      'footertextcolor': '#9CB640',
-                      'headtextcolor': '#9CB640',
-                      'codebgcolor': '#FFFFFF',
-                      }
+# html_theme_options = {
+#                       # 'nosidebar': True,
+#                       'sidebarbgcolor': '#F2F2F2',
+#                       'relbarbgcolor': '#9CB640',
+#                       'linkcolor': '#9CB640',
+#                       'sidebarlinkcolor': '#9CB640',
+#                       'footerbgcolor': '#FFFFFF',
+#                       'footertextcolor': '#9CB640',
+#                       'headtextcolor': '#9CB640',
+#                       'codebgcolor': '#FFFFFF',
+#                       }
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -124,7 +127,7 @@ html_title = "XlsxWriter Documentation"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = '_images/logo.png'
+#html_logo = '_images/logo.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -161,7 +164,7 @@ html_static_path = ['_static']
 # html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-html_show_sourcelink = True
+# html_show_sourcelink = True
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 html_show_sphinx = True
@@ -181,7 +184,7 @@ html_show_copyright = True
 htmlhelp_basename = 'XlsxWriterdoc'
 
 # Remove permalinks.
-html_add_permalinks = False
+html_add_permalinks = ""
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -265,7 +268,7 @@ texinfo_documents = [
 epub_title = u'XlsxWriter'
 epub_author = u'John McNamara'
 epub_publisher = u'John McNamara'
-epub_copyright = u'2013, John McNamara'
+epub_copyright = u'2013-2015, John McNamara'
 
 # The language of the text. It defaults to the language option
 # or en if the language is not set.

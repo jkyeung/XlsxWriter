@@ -2,7 +2,7 @@
 #
 # Format - A class for writing the Excel XLSX Worksheet file.
 #
-# Copyright 2013, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
 # Package imports.
@@ -22,7 +22,7 @@ class Format(xmlwriter.XMLwriter):
     #
     ###########################################################################
 
-    def __init__(self, properties={}, xf_indicies=None, dxf_indicies=None):
+    def __init__(self, properties={}, xf_indices=None, dxf_indices=None):
         """
         Constructor.
 
@@ -30,8 +30,8 @@ class Format(xmlwriter.XMLwriter):
 
         super(Format, self).__init__()
 
-        self.xf_format_indices = xf_indicies
-        self.dxf_format_indices = dxf_indicies
+        self.xf_format_indices = xf_indices
+        self.dxf_format_indices = dxf_indices
         self.xf_index = None
         self.dxf_index = None
 
@@ -67,6 +67,7 @@ class Format(xmlwriter.XMLwriter):
         self.text_v_align = 0
         self.text_justlast = 0
         self.rotation = 0
+        self.center_across = 0
 
         self.fg_color = 0
         self.bg_color = 0
@@ -748,15 +749,6 @@ class Format(xmlwriter.XMLwriter):
     #
     ###########################################################################
 
-    def _assemble_xml_file(self):
-        # Assemble and write the XML file.
-
-        # Write the XML declaration.
-        self._xml_declaration()
-
-        # Close the file.
-        self._xml_close()
-
     def _get_align_properties(self):
         # Return properties for an Style xf <alignment> sub-element.
         changed = 0
@@ -924,7 +916,7 @@ class Format(xmlwriter.XMLwriter):
         return key
 
     def _get_xf_index(self):
-        # Returns the index index number used by Excel to identify a format.
+        # Returns the XF index number used by Excel to identify a format.
         if self.xf_index is not None:
             # Format already has an index number so return it.
             return self.xf_index
@@ -944,7 +936,7 @@ class Format(xmlwriter.XMLwriter):
                 return index
 
     def _get_dxf_index(self):
-        # Returns the index index number used by Excel to identify a format.
+        # Returns the DXF index number used by Excel to identify a format.
         if self.dxf_index is not None:
             # Format already has an index number so return it.
             return self.dxf_index

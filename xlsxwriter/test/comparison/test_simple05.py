@@ -2,16 +2,14 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
-import unittest
-import os
+from ..excel_comparsion_test import ExcelComparisonTest
 from ...workbook import Workbook
-from ..helperfunctions import _compare_xlsx_files
 
 
-class TestCompareXLSXFiles(unittest.TestCase):
+class TestCompareXLSXFiles(ExcelComparisonTest):
     """
     Test file created by XlsxWriter against a file created by Excel.
 
@@ -31,11 +29,8 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
     def test_create_file(self):
         """Test font formatting."""
-        filename = self.got_filename
 
-        ####################################################
-
-        workbook = Workbook(filename)
+        workbook = Workbook(self.got_filename)
 
         worksheet = workbook.add_worksheet()
 
@@ -60,20 +55,34 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
         workbook.close()
 
-        ####################################################
+        self.assertExcelEqual()
 
-        got, exp = _compare_xlsx_files(self.got_filename,
-                                       self.exp_filename,
-                                       self.ignore_files,
-                                       self.ignore_elements)
+    def test_create_file_in_memory(self):
+        """Test font formatting."""
 
-        self.assertEqual(got, exp)
+        workbook = Workbook(self.got_filename, {'in_memory': True})
 
-    def tearDown(self):
-        # Cleanup.
-        if os.path.exists(self.got_filename):
-            os.remove(self.got_filename)
+        worksheet = workbook.add_worksheet()
 
+        worksheet.set_row(5, 18)
+        worksheet.set_row(6, 18)
 
-if __name__ == '__main__':
-    unittest.main()
+        format1 = workbook.add_format({'bold': 1})
+        format2 = workbook.add_format({'italic': 1})
+        format3 = workbook.add_format({'bold': 1, 'italic': 1})
+        format4 = workbook.add_format({'underline': 1})
+        format5 = workbook.add_format({'font_strikeout': 1})
+        format6 = workbook.add_format({'font_script': 1})
+        format7 = workbook.add_format({'font_script': 2})
+
+        worksheet.write_string(0, 0, 'Foo', format1)
+        worksheet.write_string(1, 0, 'Foo', format2)
+        worksheet.write_string(2, 0, 'Foo', format3)
+        worksheet.write_string(3, 0, 'Foo', format4)
+        worksheet.write_string(4, 0, 'Foo', format5)
+        worksheet.write_string(5, 0, 'Foo', format6)
+        worksheet.write_string(6, 0, 'Foo', format7)
+
+        workbook.close()
+
+        self.assertExcelEqual()

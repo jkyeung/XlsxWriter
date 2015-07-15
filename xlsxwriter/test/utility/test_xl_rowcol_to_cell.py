@@ -2,7 +2,7 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
 import unittest
@@ -85,6 +85,3 @@ class TestUtility(unittest.TestCase):
             exp = string
             got = xl_rowcol_to_cell_fast(row, col)
             self.assertEqual(got, exp)
-
-if __name__ == '__main__':
-    unittest.main()

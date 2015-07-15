@@ -2,7 +2,7 @@
 #
 # An example of adding document properties to a XlsxWriter file.
 #
-# Copyright 2013, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 import xlsxwriter
 
@@ -23,3 +23,5 @@ workbook.set_properties({
 
 worksheet.set_column('A:A', 70)
 worksheet.write('A1', "Select 'Workbook Properties' to see properties.")
+
+workbook.close()

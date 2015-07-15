@@ -6,27 +6,53 @@ Known Issues and Bugs
 This section lists known issues and bugs and gives some information on how to
 submit bug reports.
 
+"Content is Unreadable. Open and Repair"
+----------------------------------------
 
-'unknown encoding: utf-8' Error
--------------------------------
+Very, very occasionally you may see an Excel warning when opening an XlsxWriter
+file like:
 
-The following error can occur on Windows if the :func:`close` method isn't used
-at the end of the program::
+   Excel could not open file.xlsx because some content is unreadable. Do you
+   want to open and repair this workbook.
 
-    Exception LookupError: 'unknown encoding: utf-8' in <bound method
-    Workbook.__del__ of <xlsxwriter.workbook.Workbook object at 0x022C1450>>
+This ominous sounding message is Excel's default warning for any validation
+error in the XML used for the components of the XLSX file.
 
-This appears to be an issue with the implicit destructor on Windows. It is
-under investigation. Use ``close()`` as a workaround.
+If you encounter an issue like this you should open an issue on GitHub with a
+program to replicate the issue (see below) or send one of the failing output
+files to the :ref:`author`.
 
 
-Formula results not displaying in Excel
----------------------------------------
+"Exception caught in workbook destructor. Explicit close() may be required"
+---------------------------------------------------------------------------
 
-Some early versions of Excel 2007 do not display the calculated values of
-formulas written by XlsxWriter. Applying all available Service Packs to Excel
-should fix this.
+The following exception, or similar, can occur if the :func:`close` method
+isn't used at the end of the program::
 
+    Exception Exception: Exception('Exception caught in workbook destructor.
+    Explicit close() may be required for workbook.',)
+    in <bound method Workbook.__del__ of <xlsxwriter.workbook.Workbookobject
+    at 0x103297d50>>
+
+Note, it is possible that this exception will also be raised as part of
+another exception that occurs during workbook destruction. In either case
+ensure that there is an explicit ``workbook.close()`` in the program.
+
+
+Formulas displayed as ``#NAME?`` until edited
+---------------------------------------------
+
+Excel 2010 and 2013 added functions which weren't defined in the original file
+specification. These functions are referred to as *future* functions. Examples
+of these functions are ``ACOT``, ``CHISQ.DIST.RT`` , ``CONFIDENCE.NORM``,
+``STDEV.P``, ``STDEV.S`` and ``WORKDAY.INTL``. The full list is given in the
+`MS XLSX extensions documentation on future functions <http://msdn.microsoft.com/en-us/library/dd907480%28v=office.12%29.aspx>`_.
+
+When written using ``write_formula()`` these functions need to be fully
+qualified with the ``_xlfn.`` prefix as they are shown in the MS XLSX
+documentation link above. For example::
+
+    worksheet.write_formula('A1', '=_xlfn.STDEV.S(B1:B10)')
 
 Formula results displaying as zero in non-Excel applications
 ------------------------------------------------------------
@@ -60,6 +86,18 @@ applications. One known exception is Apple Numbers for Mac where the string
 data isn't displayed.
 
 
+Images not displayed correctly in Excel 2001 for Mac and non-Excel applications
+-------------------------------------------------------------------------------
+
+Images inserted into worksheets via :func:`insert_image` may not display
+correctly in Excel 2011 for Mac and non-Excel applications such as OpenOffice
+and LibreOffice. Specifically the images may looked stretched or squashed.
+
+This is not specifically an XlsxWriter issue. It also occurs with files created
+in Excel 2007 and Excel 2010.
+
+
+
 Reporting Bugs
 ==============
 
@@ -70,21 +108,25 @@ Upgrade to the latest version of the module
 -------------------------------------------
 
 The bug you are reporting may already be fixed in the latest version of the
-module. Check the :ref:`changes` section as well.
+module. You can check which version of XlsxWriter that you are using as
+follows::
+
+    python -c 'import xlsxwriter; print(xlsxwriter.__version__)'
+
+Check the :ref:`changes` section to see what has changed in the latest versions.
+
 
 Read the documentation
 ----------------------
 
-The XlsxWriter documentation has been refined in response to user questions.
-Therefore, if you have a question it is possible that someone else has asked
-it before you and that it is already addressed in the documentation.
+Read or search the XlsxWriter documentation to see if the issue you are
+encountering is already explained.
 
 Look at the example programs
 ----------------------------
 
-There are several example programs in the distribution. Many of these were
-created in response to user questions. Try to identify an example program that
-corresponds to your query and adapt it to your needs.
+There are many :ref:`examples` in the distribution. Try to identify an example
+program that corresponds to your query and adapt it to use as a bug report.
 
 Use the official XlsxWriter Issue tracker on GitHub
 ---------------------------------------------------
@@ -96,20 +138,20 @@ The official XlsxWriter
 Pointers for submitting a bug report
 ------------------------------------
 
-1. Describe the problem as clearly and as concisely as possible.
-2. Include a sample program. This is probably the most important step. Also,
-   it is often easier to describe a problem in code than in written prose.
-3. The sample program should be as small as possible to demonstrate the
-   problem. Don't copy and past large sections of your program. The program
-   should also be self contained and working.
+#. Describe the problem as clearly and as concisely as possible.
 
-A sample bug report is shown below. If you use this format then it will help to
-analyse your question and respond to it more quickly.
+#. Include a sample program. This is probably the most important step. It is
+   generally easier to describe a problem in code than in written prose.
 
-   **XlsxWriter Issue with SOMETHING**
+#. The sample program should be as small as possible to demonstrate the
+   problem. Don't copy and paste large non-relevant sections of your program.
 
-   I am using XlsxWriter and I have encountered a problem. I want it to do
-   SOMETHING but the module appears to do SOMETHING ELSE.
+A sample bug report is shown below. This format helps to analyse and respond to
+the bug report more quickly.
+
+   **Issue with SOMETHING**
+
+   I am using XlsxWriter to do SOMETHING but it appears to do SOMETHING ELSE.
 
    I am using Python version X.Y.Z and XlsxWriter x.y.z.
 
@@ -124,6 +166,5 @@ analyse your question and respond to it more quickly.
 
        workbook.close()
 
-
-
-
+See also how `How to create a Minimal, Complete, and Verifiable example
+<http://stackoverflow.com/help/mcve>`_ from StackOverflow.

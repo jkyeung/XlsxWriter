@@ -2,16 +2,14 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
-import unittest
-import os
+from ..excel_comparsion_test import ExcelComparisonTest
 from ...workbook import Workbook
-from ..helperfunctions import _compare_xlsx_files
 
 
-class TestCompareXLSXFiles(unittest.TestCase):
+class TestCompareXLSXFiles(ExcelComparisonTest):
     """
     Test file created by XlsxWriter against a file created by Excel.
 
@@ -29,35 +27,42 @@ class TestCompareXLSXFiles(unittest.TestCase):
         self.ignore_files = []
         self.ignore_elements = {}
 
-    def test_create_file(self):
-        """Test the creation of a simple XlsxWriter file with hyperlinks.This example has link formatting."""
-        filename = self.got_filename
+    def test_link_format_explicit(self):
+        """Test the creation of a simple XlsxWriter file with hyperlinks. This example has link formatting."""
 
-        ####################################################
-
-        workbook = Workbook(filename)
+        workbook = Workbook(self.got_filename)
 
         worksheet = workbook.add_worksheet()
-        format = workbook.add_format({'color': 'blue', 'underline': 1})
+        url_format = workbook.add_format({'color': 'blue', 'underline': 1})
 
-        worksheet.write_url('A1', 'http://www.perl.org/', format)
+        worksheet.write_url('A1', 'http://www.perl.org/', url_format)
 
         workbook.close()
 
-        ####################################################
+        self.assertExcelEqual()
 
-        got, exp = _compare_xlsx_files(self.got_filename,
-                                       self.exp_filename,
-                                       self.ignore_files,
-                                       self.ignore_elements)
+    def test_link_format_implicit(self):
+        """Test the creation of a simple XlsxWriter file with hyperlinks. This example has link formatting."""
 
-        self.assertEqual(got, exp)
+        workbook = Workbook(self.got_filename)
 
-    def tearDown(self):
-        # Cleanup.
-        if os.path.exists(self.got_filename):
-            os.remove(self.got_filename)
+        worksheet = workbook.add_worksheet()
 
+        worksheet.write_url('A1', 'http://www.perl.org/')
 
-if __name__ == '__main__':
-    unittest.main()
+        workbook.close()
+
+        self.assertExcelEqual()
+
+    def test_link_format_none(self):
+        """Test the creation of a simple XlsxWriter file with hyperlinks. This example has link formatting."""
+
+        workbook = Workbook(self.got_filename)
+
+        worksheet = workbook.add_worksheet()
+
+        worksheet.write_url('A1', 'http://www.perl.org/', None)
+
+        workbook.close()
+
+        self.assertExcelEqual()

@@ -2,16 +2,14 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
-import unittest
-import os
+from ..excel_comparsion_test import ExcelComparisonTest
 from ...workbook import Workbook
-from ..helperfunctions import _compare_xlsx_files
 
 
-class TestCompareXLSXFiles(unittest.TestCase):
+class TestCompareXLSXFiles(ExcelComparisonTest):
     """
     Test file created by XlsxWriter against a file created by Excel.
 
@@ -23,7 +21,7 @@ class TestCompareXLSXFiles(unittest.TestCase):
         filename = 'set_column01.xlsx'
 
         test_dir = 'xlsxwriter/test/comparison/'
-        self.got_filename = test_dir + '_test_' + filename
+        self.got_filename = test_dir + '_test_2_' + filename
         self.exp_filename = test_dir + 'xlsx_files/' + filename
 
         self.ignore_files = []
@@ -31,11 +29,8 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
     def test_create_file(self):
         """Test the creation of a simple XlsxWriter file."""
-        filename = self.got_filename
 
-        ####################################################
-
-        workbook = Workbook(filename)
+        workbook = Workbook(self.got_filename)
 
         worksheet = workbook.add_worksheet()
 
@@ -74,20 +69,4 @@ class TestCompareXLSXFiles(unittest.TestCase):
 
         workbook.close()
 
-        ####################################################
-
-        got, exp = _compare_xlsx_files(self.got_filename,
-                                       self.exp_filename,
-                                       self.ignore_files,
-                                       self.ignore_elements)
-
-        self.assertEqual(got, exp)
-
-    def tearDown(self):
-        # Cleanup.
-        if os.path.exists(self.got_filename):
-            os.remove(self.got_filename)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        self.assertExcelEqual()

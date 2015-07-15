@@ -5,7 +5,7 @@
 # This method is used to define a user friendly name to represent a value,
 # a single cell or a range of cells in a workbook.
 #
-# Copyright 2013, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 import xlsxwriter
 
@@ -29,3 +29,5 @@ for worksheet in workbook.worksheets():
     worksheet.write('A3', 'Example formula in cell B3 ->')
 
     worksheet.write('B3', '=Exchange_rate')
+
+workbook.close()

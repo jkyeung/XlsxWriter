@@ -100,9 +100,9 @@ $ sudo python setup.py install</pre>
 <h2>Running a sample program</h2>
 <p>If the installation went correctly you can create a small sample program like
 the following to verify that the module works correctly:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">xlsxwriter.workbook</span> <span class="kn">import</span> <span class="n">Workbook</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="n">xlsxwriter</span>
 
-<span class="n">workbook</span> <span class="o">=</span> <span class="n">Workbook</span><span class="p">(</span><span class="s">&#39;hello.xlsx&#39;</span><span class="p">)</span>
+<span class="n">workbook</span> <span class="o">=</span> <span class="n">xlsxwriter.Workbook</span><span class="p">(</span><span class="s">&#39;hello.xlsx&#39;</span><span class="p">)</span>
 <span class="n">worksheet</span> <span class="o">=</span> <span class="n">workbook</span><span class="o">.</span><span class="n">add_worksheet</span><span class="p">()</span>
 
 <span class="n">worksheet</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;A1&#39;</span><span class="p">,</span> <span class="s">&#39;Hello world&#39;</span><span class="p">)</span>
@@ -126,7 +126,7 @@ XlsxWriter.</p>
 <div class="section" id="documentation">
 <h1>Documentation</h1>
 <p>The full version of XlsxWriter documentation is hosted on
-<a class="reference external" href="https://xlsxwriter.readthedocs.org/en/latest/">Read The Docs</a>. It is
+<a class="reference external" href="http://xlsxwriter.readthedocs.org">Read The Docs</a>. It is
 also available as a
 <a class="reference external" href="https://github.com/jmcnamara/XlsxWriter/raw/master/docs/XlsxWriter.pdf">PDF</a>.</p>
 </div>
@@ -146,7 +146,7 @@ also available as a
       <div class="clearer"></div>
     </div>
     <div class="footer">
-        &copy; Copyright 2013, John McNamara.
+        &copy; Copyright 2013-2015, John McNamara.
     </div>
   </body>
 </html>

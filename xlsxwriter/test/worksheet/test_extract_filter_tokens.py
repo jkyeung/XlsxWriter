@@ -2,11 +2,11 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
 #
 
 import unittest
-from ..compatibility import StringIO
+from ...compatibility import StringIO
 from ...worksheet import Worksheet
 
 
@@ -123,7 +123,3 @@ class TestExtractFilterTokens(unittest.TestCase):
             got = self.worksheet._extract_filter_tokens(expression)
 
             self.assertEqual(got, exp)
-
-
-if __name__ == '__main__':
-    unittest.main()
