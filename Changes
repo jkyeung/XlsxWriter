@@ -9,7 +9,7 @@ Release 0.8.7 - May 13 2016
 * Added :func:`get_worksheet_by_name()` method to allow the retrieval of a
   worksheet from a workbook via its name.
 
-* Fixed issue where internal file creation and modification dates where in the
+* Fixed issue where internal file creation and modification dates were in the
   local timezone instead of UTC.
 
 Release 0.8.6 - April 27 2016
