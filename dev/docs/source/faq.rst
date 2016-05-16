@@ -35,6 +35,8 @@ formula using the optional ``value`` parameter in :func:`write_formula()`::
 
     worksheet.write_formula('A1', '=2+2', num_format, 4)
 
+See also :ref:`formula_result`,
+
 
 Q. Can I apply a format to a range of cells in one go?
 ------------------------------------------------------
@@ -54,12 +56,12 @@ Q. Is there an "AutoFit" option for columns?
 
 Unfortunately, there is no way to specify "AutoFit" for a column in the Excel
 file format. This feature is only available at runtime from within Excel. It
-is possible to simulate "AutoFit" by tracking the width of the data in the
-column as your write it.
+is possible to simulate "AutoFit" in your application by tracking the maximum
+width of the data in the column as your write it and then adjusting the column
+width at the end.
 
 
 Q. Do people actually ask these questions frequently, or at all?
 ----------------------------------------------------------------
 
 Apart from this question, yes.
-

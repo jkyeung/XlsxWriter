@@ -292,7 +292,7 @@ For example::
 
 
 For simple text, if you do not specify any justification the text will be
-centred. However, you must prefix the text with ``&C`` if you specify a font
+centered. However, you must prefix the text with ``&C`` if you specify a font
 name or any other formatting::
 
     worksheet.set_header('Hello')
@@ -388,7 +388,7 @@ use a double ampersand ``&&``::
 
     worksheet1.set_header('&CCuriouser && Curiouser - Attorneys at Law')
 
-The available optons are:
+The available options are:
 
 * ``margin``: (float) Header margin in inches. Defaults to 0.3 inch.
 * ``image_left``: (string) The path to the image. Needs ``&G`` placeholder.

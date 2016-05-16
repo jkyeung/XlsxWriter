@@ -2,6 +2,7 @@ MANIFEST
 dist/*
 *.tar.gz
 *~
+*.bak
 TAGS
 .#*
 *#
@@ -23,5 +24,6 @@ objects.inv
 __pycache__
 .tox/
 .idea
+.cache/
 XlsxWriter.egg-info/
 

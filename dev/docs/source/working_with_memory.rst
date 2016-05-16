@@ -14,7 +14,7 @@ Fortunately, this memory usage can be reduced almost completely by using the
 
     workbook = xlsxwriter.Workbook(filename, {'constant_memory': True})
 
-The optimisation works by flushing each row after a subsequent row is written.
+The optimization works by flushing each row after a subsequent row is written.
 In this way the largest amount of data held in memory for a worksheet is the
 amount of data required to hold a single row of data.
 
@@ -31,7 +31,7 @@ row order when ``'constant_memory'`` mode is on::
         for row in range(0, row_max):
             worksheet.write(row, col, some_data)
 
-Another optimisation that is used to reduce memory usage is that cell strings
+Another optimization that is used to reduce memory usage is that cell strings
 aren't stored in an Excel structure call "shared strings" and instead are
 written "in-line". This is a documented Excel feature that is supported by
 most spreadsheet applications. One known exception is Apple Numbers for Mac
@@ -39,7 +39,9 @@ where the string data isn't displayed.
 
 The trade-off when using ``'constant_memory'`` mode is that you won't be able
 to take advantage of any new features that manipulate cell data after it is
-written. Currently the only such feature is :ref:`Worksheet Tables <tables>`.
+written. Currently the :func:`add_table()` and :func:`merge_range()` Worksheet
+methods don't work in this mode.
+
 
 For larger files ``'constant_memory'`` mode also gives an increase in execution
 speed, see below.
@@ -106,7 +108,7 @@ Benchmark of Python Excel Writers
 ---------------------------------
 
 If you wish to compare the performance of different Python Excel writing
-modules there is a progam called `bench_excel_writers.py
+modules there is a program called `bench_excel_writers.py
 <https://raw.githubusercontent.com/jmcnamara/XlsxWriter/master/dev/performance/bench_excel_writers.py>`_
 in the ``dev/performance`` directory of the XlsxWriter repo.
 
@@ -127,9 +129,9 @@ of the modules at the time of writing::
     Times:
         pyexcelerate          :  10.63
         xlwt                  :  16.93
-        xlsxwriter (optimised):  20.37
+        xlsxwriter (optimized):  20.37
         xlsxwriter            :  24.24
-        openpyxl   (optimised):  26.63
+        openpyxl   (optimized):  26.63
         openpyxl              :  35.75
 
 

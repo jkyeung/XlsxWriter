@@ -2,10 +2,8 @@
 #
 # Drawing - A class for writing the Excel XLSX Drawing file.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
-
-import re
 
 from . import xmlwriter
 from .shape import Shape
@@ -1048,9 +1046,6 @@ class Drawing(xmlwriter.XMLwriter):
 
     def _write_a_fill_to_rect(self, gradient_type):
         # Write the <a:fillToRect> element.
-
-        l = '100000'
-        t = '100000'
 
         if gradient_type == 'shape':
             attributes = [

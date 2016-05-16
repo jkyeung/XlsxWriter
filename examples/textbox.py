@@ -3,7 +3,7 @@
 # An example of inserting textboxes into an Excel worksheet using
 # Python and XlsxWriter.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 import xlsxwriter
 
@@ -162,7 +162,7 @@ worksheet.insert_textbox(row, col, text, options)
 row += 10
 
 # Example
-text = 'Some text in a textbox with formattting'
+text = 'Some text in a textbox with formatting'
 options = {
     'font': {'color': 'white'},
     'align': {'vertical': 'middle',

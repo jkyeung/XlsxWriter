@@ -2,9 +2,10 @@
 #
 # Shape - A class for to represent Excel XLSX shape objects.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 import copy
+from warnings import warn
 
 
 class Shape(object):
@@ -135,6 +136,87 @@ class Shape(object):
         return fill
 
     @staticmethod
+    def _get_pattern_properties(pattern):
+        # Convert user defined pattern to the structure required internally.
+
+        if not pattern:
+            return
+
+        # Copy the user defined properties since they will be modified.
+        pattern = copy.deepcopy(pattern)
+
+        if not pattern.get('pattern'):
+            warn("Pattern must include 'pattern'")
+            return
+
+        if not pattern.get('fg_color'):
+            warn("Pattern must include 'fg_color'")
+            return
+
+        types = {
+            'percent_5': 'pct5',
+            'percent_10': 'pct10',
+            'percent_20': 'pct20',
+            'percent_25': 'pct25',
+            'percent_30': 'pct30',
+            'percent_40': 'pct40',
+            'percent_50': 'pct50',
+            'percent_60': 'pct60',
+            'percent_70': 'pct70',
+            'percent_75': 'pct75',
+            'percent_80': 'pct80',
+            'percent_90': 'pct90',
+            'light_downward_diagonal': 'ltDnDiag',
+            'light_upward_diagonal': 'ltUpDiag',
+            'dark_downward_diagonal': 'dkDnDiag',
+            'dark_upward_diagonal': 'dkUpDiag',
+            'wide_downward_diagonal': 'wdDnDiag',
+            'wide_upward_diagonal': 'wdUpDiag',
+            'light_vertical': 'ltVert',
+            'light_horizontal': 'ltHorz',
+            'narrow_vertical': 'narVert',
+            'narrow_horizontal': 'narHorz',
+            'dark_vertical': 'dkVert',
+            'dark_horizontal': 'dkHorz',
+            'dashed_downward_diagonal': 'dashDnDiag',
+            'dashed_upward_diagonal': 'dashUpDiag',
+            'dashed_horizontal': 'dashHorz',
+            'dashed_vertical': 'dashVert',
+            'small_confetti': 'smConfetti',
+            'large_confetti': 'lgConfetti',
+            'zigzag': 'zigZag',
+            'wave': 'wave',
+            'diagonal_brick': 'diagBrick',
+            'horizontal_brick': 'horzBrick',
+            'weave': 'weave',
+            'plaid': 'plaid',
+            'divot': 'divot',
+            'dotted_grid': 'dotGrid',
+            'dotted_diamond': 'dotDmnd',
+            'shingle': 'shingle',
+            'trellis': 'trellis',
+            'sphere': 'sphere',
+            'small_grid': 'smGrid',
+            'large_grid': 'lgGrid',
+            'small_check': 'smCheck',
+            'large_check': 'lgCheck',
+            'outlined_diamond': 'openDmnd',
+            'solid_diamond': 'solidDmnd',
+        }
+
+        # Check for valid types.
+        if not pattern['pattern'] in types:
+            warn("unknown pattern type '%s'" % pattern['pattern'])
+            return
+        else:
+            pattern['pattern'] = types[pattern['pattern']]
+
+        # Specify a default background color.
+        pattern['bg_color'] = pattern.get('bg_color', '#FFFFFF')
+
+        return pattern
+
+    @staticmethod
     def _get_gradient_properties(gradient):
         # Convert user defined gradient to the structure required internally.
 
@@ -152,7 +234,7 @@ class Shape(object):
         }
 
         # Check the colors array exists and is valid.
-        if 'colors' not in gradient and type(gradient['colors']) != list:
+        if 'colors' not in gradient or type(gradient['colors']) != list:
             warn("Gradient must include colors list")
             return
 

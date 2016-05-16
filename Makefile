@@ -4,7 +4,7 @@
 
 .PHONY: docs
 
-docs:
+docs doc:
 	@make -C dev/docs html
 
 pdf:
@@ -50,12 +50,21 @@ testpythonsall:
 	@~/.pythonbrew/pythons/Python-3.3.2/bin/py.test -q
 	@echo "Testing with Python 3.4.1:"
 	@~/.pythonbrew/pythons/Python-3.4.1/bin/py.test -q
+	@echo "Testing with Python 3.5.0:"
+	@~/.pythonbrew/pythons/Python-3.5.0/bin/py.test -q
 
 testpep8:
-	@ls -1 xlsxwriter/*.py | egrep -v "theme|compat" | xargs pep8
+	@ls -1 xlsxwriter/*.py | egrep -v "theme|compat|__init__" | xargs flake8
 	@pep8 --ignore=E501 xlsxwriter/theme.py
 	@pep8 --ignore=E501 xlsxwriter/compat_collections.py
 	@find xlsxwriter/test -name \*.py | xargs pep8 --ignore=E501
+
+spellcheck:
+	@for f in dev/docs/source/*.rst; do aspell --lang=en_US --check $$f; done
+	@for f in *.md;                  do aspell --lang=en_US --check $$f; done
+	@for f in xlsxwriter/*.py;       do aspell --lang=en_US --check $$f; done
+	@for f in examples/*.py;         do aspell --lang=en_US --check $$f; done
+	@aspell --lang=en_US --check Changes
 
 releasecheck:
 	@dev/release/release_check.sh

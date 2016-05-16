@@ -2,7 +2,7 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 
 import unittest
@@ -28,7 +28,7 @@ class TestAssembleTable(unittest.TestCase):
         worksheet.str_table = SharedStringTable()
 
         worksheet.add_table('D4:I15', {'style': 'Table Style Light 17'})
-        worksheet._prepare_tables(1)
+        worksheet._prepare_tables(1, {})
 
         fh = StringIO()
         table = Table()

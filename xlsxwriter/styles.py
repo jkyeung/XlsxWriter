@@ -2,7 +2,7 @@
 #
 # Styles - A class for writing the Excel XLSX Worksheet file.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 
 # Package imports.
@@ -262,6 +262,10 @@ class Styles(xmlwriter.XMLwriter):
 
             if xf_format.font_family:
                 self._xml_empty_tag('family', [('val', xf_format.font_family)])
+
+            if xf_format.font_charset:
+                self._xml_empty_tag('charset',
+                                    [('val', xf_format.font_charset)])
 
             if xf_format.font_name == 'Calibri' and not xf_format.hyperlink:
                 self._xml_empty_tag(
@@ -666,7 +670,7 @@ class Styles(xmlwriter.XMLwriter):
         self._xml_end_tag('colors')
 
     def _write_mru_colors(self, custom_colors):
-        # Write the <mruColors> element for the most recently used colours.
+        # Write the <mruColors> element for the most recently used colors.
 
         # Write the custom custom_colors in reverse order.
         custom_colors.reverse()

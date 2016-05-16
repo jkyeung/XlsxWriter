@@ -2,7 +2,7 @@
 #
 # Chart - A class for writing the Excel XLSX Worksheet file.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 import re
 import copy
@@ -150,11 +150,19 @@ class Chart(xmlwriter.XMLwriter):
         # Set the fill properties for the series.
         fill = Shape._get_fill_properties(options.get('fill'))
 
-        # Set the gradient gradient properties for the series.
+        # Set the pattern fill properties for the series.
+        pattern = Shape._get_pattern_properties(options.get('pattern'))
+
+        # Set the gradient fill properties for the series.
         gradient = Shape._get_gradient_properties(options.get('gradient'))
 
-        # Gradient fill overrides solid fill.
+        # Pattern fill overrides solid fill.
+        if pattern:
+            self.fill = None
+
+        # Gradient fill overrides the solid and pattern fill.
         if gradient:
+            pattern = None
             fill = None
 
         # Set the marker properties for the series.
@@ -215,6 +223,7 @@ class Chart(xmlwriter.XMLwriter):
             'cat_data_id': cat_id,
             'line': line,
             'fill': fill,
+            'pattern': pattern,
             'gradient': gradient,
             'marker': marker,
             'trendline': trendline,
@@ -534,14 +543,25 @@ class Chart(xmlwriter.XMLwriter):
         line = Shape._get_line_properties(options.get('line'))
         fill = Shape._get_fill_properties(options.get('fill'))
 
-        # Set the gradient gradient properties for the series.
+        # Set the pattern fill properties for the series.
+        pattern = Shape._get_pattern_properties(options.get('pattern'))
+
+        # Set the gradient fill properties for the series.
         gradient = Shape._get_gradient_properties(options.get('gradient'))
 
-        # Gradient fill overrides solid fill.
+        # Pattern fill overrides solid fill.
+        if pattern:
+            self.fill = None
+
+        # Gradient fill overrides the solid and pattern fill.
         if gradient:
+            pattern = None
             fill = None
 
-        self.drop_lines = {'line': line, 'fill': fill, 'gradient': gradient}
+        self.drop_lines = {'line': line,
+                           'fill': fill,
+                           'pattern': pattern,
+                           'gradient': gradient}
 
     def set_high_low_lines(self, options=None):
         """
@@ -560,14 +580,25 @@ class Chart(xmlwriter.XMLwriter):
         line = Shape._get_line_properties(options.get('line'))
         fill = Shape._get_fill_properties(options.get('fill'))
 
-        # Set the gradient gradient properties for the series.
+        # Set the pattern fill properties for the series.
+        pattern = Shape._get_pattern_properties(options.get('pattern'))
+
+        # Set the gradient fill properties for the series.
         gradient = Shape._get_gradient_properties(options.get('gradient'))
 
-        # Gradient fill overrides solid fill.
+        # Pattern fill overrides solid fill.
+        if pattern:
+            self.fill = None
+
+        # Gradient fill overrides the solid and pattern fill.
         if gradient:
+            pattern = None
             fill = None
 
-        self.hi_low_lines = {'line': line, 'fill': fill, 'gradient': gradient}
+        self.hi_low_lines = {'line': line,
+                             'fill': fill,
+                             'pattern': pattern,
+                             'gradient': gradient}
 
     def combine(self, chart=None):
         """
@@ -655,6 +686,7 @@ class Chart(xmlwriter.XMLwriter):
             'num_format': options.get('num_format'),
             'num_format_linked': options.get('num_format_linked'),
             'interval_unit': options.get('interval_unit'),
+            'interval_tick': options.get('interval_tick'),
             'text_axis': False,
         }
 
@@ -729,13 +761,27 @@ class Chart(xmlwriter.XMLwriter):
         # Set the fill properties for the axis.
         axis['fill'] = Shape._get_fill_properties(options.get('fill'))
 
-        # Set the gradient gradient properties for the series.
+        # Set the pattern fill properties for the series.
+        axis['pattern'] = Shape._get_pattern_properties(options.get('pattern'))
+
+        # Set the gradient fill properties for the series.
         axis['gradient'] = \
             Shape._get_gradient_properties(options.get('gradient'))
 
-        # Gradient fill overrides solid fill.
-        if axis.get('gradient'):
+        # Pattern fill overrides solid fill.
+        if axis.get('pattern'):
             axis['fill'] = None
+
+        # Gradient fill overrides the solid and pattern fill.
+        if axis.get('gradient'):
+            axis['pattern'] = None
+            axis['fill'] = None
+
+        # Set the tick marker types.
+        axis['minor_tick_mark'] = \
+            self._get_tick_type(options.get('minor_tick_mark'))
+        axis['major_tick_mark'] = \
+            self._get_tick_type(options.get('major_tick_mark'))
 
         return axis
 
@@ -901,15 +947,24 @@ class Chart(xmlwriter.XMLwriter):
         # Set the fill properties for the marker.
         fill = Shape._get_fill_properties(marker.get('fill'))
 
-        # Set the gradient gradient properties for the series.
+        # Set the pattern fill properties for the series.
+        pattern = Shape._get_pattern_properties(marker.get('pattern'))
+
+        # Set the gradient fill properties for the series.
         gradient = Shape._get_gradient_properties(marker.get('gradient'))
 
-        # Gradient fill overrides solid fill.
+        # Pattern fill overrides solid fill.
+        if pattern:
+            self.fill = None
+
+        # Gradient fill overrides the solid and pattern fill.
         if gradient:
+            pattern = None
             fill = None
 
         marker['line'] = line
         marker['fill'] = fill
+        marker['pattern'] = pattern
         marker['gradient'] = gradient
 
         return marker
@@ -951,15 +1006,24 @@ class Chart(xmlwriter.XMLwriter):
         # Set the fill properties for the trendline.
         fill = Shape._get_fill_properties(trendline.get('fill'))
 
-        # Set the gradient gradient properties for the series.
+        # Set the pattern fill properties for the series.
+        pattern = Shape._get_pattern_properties(trendline.get('pattern'))
+
+        # Set the gradient fill properties for the series.
         gradient = Shape._get_gradient_properties(trendline.get('gradient'))
 
-        # Gradient fill overrides solid fill.
+        # Pattern fill overrides solid fill.
+        if pattern:
+            self.fill = None
+
+        # Gradient fill overrides the solid and pattern fill.
         if gradient:
+            pattern = None
             fill = None
 
         trendline['line'] = line
         trendline['fill'] = fill
+        trendline['pattern'] = pattern
         trendline['gradient'] = gradient
 
         return trendline
@@ -1095,11 +1159,19 @@ class Chart(xmlwriter.XMLwriter):
         # Set the fill properties for the chartarea.
         fill = Shape._get_fill_properties(options.get('fill'))
 
-        # Set the gradient gradient properties for the series.
+        # Set the pattern fill properties for the series.
+        pattern = Shape._get_pattern_properties(options.get('pattern'))
+
+        # Set the gradient fill properties for the series.
         gradient = Shape._get_gradient_properties(options.get('gradient'))
 
-        # Gradient fill overrides solid fill.
+        # Pattern fill overrides solid fill.
+        if pattern:
+            self.fill = None
+
+        # Gradient fill overrides the solid and pattern fill.
         if gradient:
+            pattern = None
             fill = None
 
         # Set the plotarea layout.
@@ -1107,6 +1179,7 @@ class Chart(xmlwriter.XMLwriter):
 
         area['line'] = line
         area['fill'] = fill
+        area['pattern'] = pattern
         area['layout'] = layout
         area['gradient'] = gradient
 
@@ -1178,16 +1251,26 @@ class Chart(xmlwriter.XMLwriter):
                 # Set the fill properties for the chartarea.
                 fill = Shape._get_fill_properties(user_point.get('fill'))
 
-                # Set the gradient gradient properties for the series.
+                # Set the pattern fill properties for the series.
+                pattern = \
+                    Shape._get_pattern_properties(user_point.get('pattern'))
+
+                # Set the gradient fill properties for the series.
                 gradient = \
                     Shape._get_gradient_properties(user_point.get('gradient'))
 
-                # Gradient fill overrides solid fill.
+                # Pattern fill overrides solid fill.
+                if pattern:
+                    self.fill = None
+
+                # Gradient fill overrides the solid and pattern fill.
                 if gradient:
+                    pattern = None
                     fill = None
 
                 point['line'] = line
                 point['fill'] = fill
+                point['pattern'] = pattern
                 point['gradient'] = gradient
 
             points.append(point)
@@ -1218,6 +1301,26 @@ class Chart(xmlwriter.XMLwriter):
             return
 
         return display_units
+
+    def _get_tick_type(self, tick_type):
+        # Convert user defined display units to internal units.
+        if not tick_type:
+            return
+
+        types = {
+            'outside': 'out',
+            'inside': 'in',
+            'none': 'none',
+            'cross': 'cross',
+        }
+
+        if tick_type in types:
+            tick_type = types[tick_type]
+        else:
+            warn("Unknown tick_type  '%s'" % tick_type)
+            return
+
+        return tick_type
 
     def _get_primary_axes_series(self):
         # Returns series which use the primary axes.
@@ -1398,7 +1501,7 @@ class Chart(xmlwriter.XMLwriter):
             else:
                 second_chart.id = self.id
 
-            # Shart the same filehandle for writing.
+            # Share the same filehandle for writing.
             second_chart.fh = self.fh
 
             # Share series index with primary chart.
@@ -1774,6 +1877,9 @@ class Chart(xmlwriter.XMLwriter):
         # Write the c:majorTickMark element.
         self._write_major_tick_mark(x_axis.get('major_tick_mark'))
 
+        # Write the c:minorTickMark element.
+        self._write_minor_tick_mark(x_axis.get('minor_tick_mark'))
+
         # Write the c:tickLblPos element.
         self._write_tick_label_pos(x_axis.get('label_position'))
 
@@ -1811,6 +1917,9 @@ class Chart(xmlwriter.XMLwriter):
 
         # Write the c:tickLblSkip element.
         self._write_c_tick_lbl_skip(x_axis.get('interval_unit'))
+
+        # Write the c:tickMarkSkip element.
+        self._write_c_tick_mark_skip(x_axis.get('interval_tick'))
 
         self._xml_end_tag('c:catAx')
 
@@ -1869,6 +1978,9 @@ class Chart(xmlwriter.XMLwriter):
 
         # Write the c:majorTickMark element.
         self._write_major_tick_mark(y_axis.get('major_tick_mark'))
+
+        # Write the c:minorTickMark element.
+        self._write_minor_tick_mark(y_axis.get('minor_tick_mark'))
 
         # Write the c:tickLblPos element.
         self._write_tick_label_pos(y_axis.get('label_position'))
@@ -1964,6 +2076,9 @@ class Chart(xmlwriter.XMLwriter):
         # Write the c:majorTickMark element.
         self._write_major_tick_mark(x_axis.get('major_tick_mark'))
 
+        # Write the c:minorTickMark element.
+        self._write_minor_tick_mark(x_axis.get('minor_tick_mark'))
+
         # Write the c:tickLblPos element.
         self._write_tick_label_pos(x_axis.get('label_position'))
 
@@ -2057,6 +2172,9 @@ class Chart(xmlwriter.XMLwriter):
         # Write the c:majorTickMark element.
         self._write_major_tick_mark(x_axis.get('major_tick_mark'))
 
+        # Write the c:minorTickMark element.
+        self._write_minor_tick_mark(x_axis.get('minor_tick_mark'))
+
         # Write the c:tickLblPos element.
         self._write_tick_label_pos(x_axis.get('label_position'))
 
@@ -2090,6 +2208,9 @@ class Chart(xmlwriter.XMLwriter):
 
         # Write the c:tickLblSkip element.
         self._write_c_tick_lbl_skip(x_axis.get('interval_unit'))
+
+        # Write the c:tickMarkSkip element.
+        self._write_c_tick_mark_skip(x_axis.get('interval_tick'))
 
         # Write the c:majorUnit element.
         self._write_c_major_unit(x_axis.get('major_unit'))
@@ -2217,7 +2338,7 @@ class Chart(xmlwriter.XMLwriter):
             source_linked = 0
             default_format = 0
 
-        # User override of linkedSource.
+        # User override of sourceLinked.
         if axis.get('num_format_linked'):
             source_linked = 1
 
@@ -2252,6 +2373,16 @@ class Chart(xmlwriter.XMLwriter):
         attributes = [('val', val)]
 
         self._xml_empty_tag('c:majorTickMark', attributes)
+
+    def _write_minor_tick_mark(self, val):
+        # Write the <c:minorTickMark> element.
+
+        if not val:
+            return
+
+        attributes = [('val', val)]
+
+        self._xml_empty_tag('c:minorTickMark', attributes)
 
     def _write_tick_label_pos(self, val=None):
         # Write the <c:tickLblPos> element.
@@ -2314,6 +2445,15 @@ class Chart(xmlwriter.XMLwriter):
         attributes = [('val', val)]
 
         self._xml_empty_tag('c:tickLblSkip', attributes)
+
+    def _write_c_tick_mark_skip(self, val):
+        # Write the <c:tickMarkSkip> element.
+        if val is None:
+            return
+
+        attributes = [('val', val)]
+
+        self._xml_empty_tag('c:tickMarkSkip', attributes)
 
     def _write_major_gridlines(self, gridlines):
         # Write the <c:majorGridlines> element.
@@ -2848,6 +2988,7 @@ class Chart(xmlwriter.XMLwriter):
 
         has_fill = False
         has_line = False
+        has_pattern = series.get('pattern')
         has_gradient = series.get('gradient')
 
         if series.get('fill') and series['fill']['defined']:
@@ -2856,7 +2997,8 @@ class Chart(xmlwriter.XMLwriter):
         if series.get('line') and series['line']['defined']:
             has_line = True
 
-        if not has_fill and not has_line and not has_gradient:
+        if (not has_fill and not has_line and not has_pattern
+                and not has_gradient):
             return
 
         self._xml_start_tag('c:spPr')
@@ -2869,6 +3011,10 @@ class Chart(xmlwriter.XMLwriter):
             else:
                 # Write the a:solidFill element.
                 self._write_a_solid_fill(series['fill'])
+
+        if series.get('pattern'):
+            # Write the a:gradFill element.
+            self._write_a_patt_fill(series['pattern'])
 
         if series.get('gradient'):
             # Write the a:gradFill element.
@@ -2918,25 +3064,41 @@ class Chart(xmlwriter.XMLwriter):
         # Write the <a:noFill> element.
         self._xml_empty_tag('a:noFill')
 
-    def _write_a_solid_fill(self, line):
+    def _write_a_solid_fill(self, fill):
         # Write the <a:solidFill> element.
 
         self._xml_start_tag('a:solidFill')
 
-        if 'color' in line:
-            color = get_rgb_color(line['color'])
-
+        if 'color' in fill:
+            color = get_rgb_color(fill['color'])
+            transparency = fill.get('transparency')
             # Write the a:srgbClr element.
-            self._write_a_srgb_clr(color)
+            self._write_a_srgb_clr(color, transparency)
 
         self._xml_end_tag('a:solidFill')
 
-    def _write_a_srgb_clr(self, val):
+    def _write_a_srgb_clr(self, val, transparency=None):
         # Write the <a:srgbClr> element.
+        attributes = [('val', val)]
+
+        if transparency:
+            self._xml_start_tag('a:srgbClr', attributes)
+
+            # Write the a:alpha element.
+            self._write_a_alpha(transparency)
+
+            self._xml_end_tag('a:srgbClr')
+        else:
+            self._xml_empty_tag('a:srgbClr', attributes)
+
+    def _write_a_alpha(self, val):
+        # Write the <a:alpha> element.
+
+        val = int((100 - int(val)) * 1000)
 
         attributes = [('val', val)]
 
-        self._xml_empty_tag('a:srgbClr', attributes)
+        self._xml_empty_tag('a:alpha', attributes)
 
     def _write_a_prst_dash(self, val):
         # Write the <a:prstDash> element.
@@ -3673,9 +3835,6 @@ class Chart(xmlwriter.XMLwriter):
     def _write_a_fill_to_rect(self, gradient_type):
         # Write the <a:fillToRect> element.
 
-        l = '100000'
-        t = '100000'
-
         if gradient_type == 'shape':
             attributes = [
                 ('l', '50000'),
@@ -3703,3 +3862,42 @@ class Chart(xmlwriter.XMLwriter):
             ]
 
         self._xml_empty_tag('a:tileRect', attributes)
+
+    def _write_a_patt_fill(self, pattern):
+        # Write the <a:pattFill> element.
+
+        attributes = [('prst', pattern['pattern'])]
+
+        self._xml_start_tag('a:pattFill', attributes)
+
+        # Write the a:fgClr element.
+        self._write_a_fg_clr(pattern['fg_color'])
+
+        # Write the a:bgClr element.
+        self._write_a_bg_clr(pattern['bg_color'])
+
+        self._xml_end_tag('a:pattFill')
+
+    def _write_a_fg_clr(self, color):
+        # Write the <a:fgClr> element.
+
+        color = get_rgb_color(color)
+
+        self._xml_start_tag('a:fgClr')
+
+        # Write the a:srgbClr element.
+        self._write_a_srgb_clr(color)
+
+        self._xml_end_tag('a:fgClr')
+
+    def _write_a_bg_clr(self, color):
+        # Write the <a:bgClr> element.
+
+        color = get_rgb_color(color)
+
+        self._xml_start_tag('a:bgClr')
+
+        # Write the a:srgbClr element.
+        self._write_a_srgb_clr(color)
+
+        self._xml_end_tag('a:bgClr')

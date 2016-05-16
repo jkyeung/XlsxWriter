@@ -2,7 +2,7 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 
 import unittest
@@ -33,7 +33,7 @@ class TestAssembleTable(unittest.TestCase):
                                                    {},
                                                    {'header': 'Baz'}
                                                    ]})
-        worksheet._prepare_tables(1)
+        worksheet._prepare_tables(1, {})
 
         fh = StringIO()
         table = Table()

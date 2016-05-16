@@ -2,9 +2,9 @@
 #
 # Example of how to hide rows and columns in XlsxWriter. In order to
 # hide rows without setting each one, (of approximately 1 million rows),
-# Excel uses an optimisation to hide all rows that don't have data.
+# Excel uses an optimizations to hide all rows that don't have data.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 import xlsxwriter
 

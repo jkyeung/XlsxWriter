@@ -3,7 +3,7 @@
 # An example of converting a Pandas dataframe to an xlsx file with a grouped
 # column chart using Pandas and XlsxWriter.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 
 import pandas as pd
@@ -33,7 +33,7 @@ worksheet = writer.sheets[sheet_name]
 # Create a chart object.
 chart = workbook.add_chart({'type': 'column'})
 
-# Some alternative colours for the chart.
+# Some alternative colors for the chart.
 colors = ['#E41A1C', '#377EB8', '#4DAF4A', '#984EA3', '#FF7F00']
 
 # Configure the series of the chart from the dataframe data.

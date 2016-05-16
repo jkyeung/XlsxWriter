@@ -45,7 +45,8 @@ The constructor options are:
   Note, in this mode a row of data is written and then discarded when a cell
   in a new row is added via one of the worksheet ``write_()`` methods.
   Therefore, once this mode is active, data should be written in sequential
-  row order.
+  row order. For this reason the :func:`add_table()` and :func:`merge_range()`
+  Worksheet methods don't work in this mode.
 
   See :ref:`memory_perf` for more details.
 
@@ -137,7 +138,7 @@ It is possible to write files to in-memory strings using StringIO as follows::
 To avoid the use of any temporary files and keep the entire file in-memory use
 the ``in_memory`` constructor option shown above.
 
-See also :ref:`ex_http_server`.
+See also :ref:`ex_http_server` and :ref:`ex_http_server3`.
 
 
 workbook.add_worksheet()
@@ -287,16 +288,10 @@ workbook.close()
    Close the Workbook object and write the XLSX file.
 
 The workbook ``close()`` method writes all data to the xlsx file and closes
-it. This is a mandatory method call::
+it::
 
     workbook.close()
 
-.. Note::
-
-   Earlier versions of XlsxWriter allowed an implicit ``close()`` that was
-   triggered by the garbage collector. However, this proved to be too
-   problematic and non-deterministic. An explicit ``close()`` is now
-   recommended in all XlsxWriter programs.
 
 The ``Workbook`` object also works using the ``with`` context manager. In
 which case it doesn't need an explicit `close()` statement::
@@ -309,6 +304,10 @@ which case it doesn't need an explicit `close()` statement::
 The workbook will close automatically when exiting the scope of the ``with``
 statement.
 
+.. Note::
+
+   Unless you are using the ``with`` context manager you should always use an
+   explicit ``close()`` in your XlsxWriter application.
 
 
 workbook.set_properties()
@@ -336,6 +335,7 @@ The properties that can be set are:
 * ``keywords``
 * ``comments``
 * ``status``
+* ``hyperlink_base``
 
 The properties are all optional and should be passed in dictionary format as
 follows::
@@ -393,7 +393,7 @@ Excel convention and enclose it in single quotes::
 
     workbook.define_name("'New Data'!Sales", '=Sheet2!$G$1:$G$10')
 
-The rules for names in Excel are explained in the `Miscrosoft Office
+The rules for names in Excel are explained in the `Microsoft Office
 documentation
 <http://office.microsoft.com/en-001/excel-help/define-and-use-names-in-formulas-HA010147120.aspx>`_.
 
@@ -458,6 +458,23 @@ workbook::
     for worksheet in workbook.worksheets():
         worksheet.write('A1', 'Hello')
 
+
+workbook.get_worksheet_by_name()
+--------------------------------
+
+.. function:: get_worksheet_by_name(name)
+
+   Return a worksheet object in the workbook using the sheetname.
+
+   :param string name: Name of worksheet that you wish to retrieve.
+   :rtype: A :ref:`worksheet <Worksheet>` object.
+
+The ``get_worksheet_by_name()`` method returns the worksheet or chartsheet
+object with the the given ``name`` or ``None`` if it isn't found::
+
+    worksheet = workbook.get_worksheet_by_name('Sheet1')
+
+
 workbook.set_calc_mode()
 ------------------------
 
@@ -490,5 +507,5 @@ workbook.use_zip64()
 
    Allow ZIP64 extensions when writing xlsx file zip container.
 
-Use ZIP64 extensions when writing the xlsx file zip container and allow files
+Use ZIP64 extensions when writing the xlsx file zip container to allow files
 greater than 4 GB.

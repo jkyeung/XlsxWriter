@@ -166,20 +166,23 @@ The series options that can be set are:
   such as ``=Sheet1!$A$1`` or a list with a sheetname, row and column such as
   ``['Sheet1', 0, 0]``.
 
-* ``line``: Set the properties of the series line type such as colour and
+* ``line``: Set the properties of the series line type such as color and
   width. See :ref:`chart_formatting_line`.
 
-* ``border``: Set the border properties of the series such as colour and
+* ``border``: Set the border properties of the series such as color and
   style. See :ref:`chart_formatting_border`.
 
-* ``fill``: Set the solid fill properties of the series such as colour. See
+* ``fill``: Set the solid fill properties of the series such as color. See
   :ref:`chart_formatting_fill`.
+
+* ``pattern``: Set the pattern fill properties of the series. See
+  :ref:`chart_formatting_pattern`.
 
 * ``gradient``: Set the gradient fill properties of the series. See
   :ref:`chart_formatting_gradient`.
 
 * ``marker``: Set the properties of the series marker such as style and
-  colour. See :ref:`chart_series_option_marker`.
+  color. See :ref:`chart_series_option_marker`.
 
 * ``trendline``: Set the properties of the series trendline such as linear,
   polynomial and moving average types. See
@@ -199,7 +202,7 @@ The series options that can be set are:
 * ``points``: Set properties for individual points in a series. See
   :ref:`chart_series_option_points`.
 
-* ``invert_if_negative``: Invert the fill colour for negative values. Usually
+* ``invert_if_negative``: Invert the fill color for negative values. Usually
   only applicable to column and bar charts.
 
 * ``overlap``: Set the overlap between series in a Bar/Column chart. The
@@ -268,12 +271,14 @@ The options that can be set are::
     num_format
     line
     fill
+    pattern
     gradient
     min
     max
     minor_unit
     major_unit
     interval_unit
+    interval_tick
     crossing
     position_axis
     reverse
@@ -286,6 +291,8 @@ The options that can be set are::
     text_axis
     minor_unit_type
     major_unit_type
+    minor_tick_mark
+    major_tick_mark
     display_units
     display_units_visible
 
@@ -343,15 +350,18 @@ the axis types.
   string must be used as shown above. See :func:`set_num_format()` for more
   information.
 
-* ``line``: Set the properties of the axis line type such as colour and
+* ``line``: Set the properties of the axis line type such as color and
   width. See :ref:`chart_formatting_line`::
 
     chart.set_x_axis({'line': {'none': True}})
 
-* ``fill``: Set the solid fill properties of the axis such as colour. See
+* ``fill``: Set the solid fill properties of the axis such as color. See
   :ref:`chart_formatting_fill`.  Note, in Excel the axis fill is applied to
   the area of the numbers of the axis and not to the area of the axis bounding
   box. That background is set from the chartarea fill.
+
+* ``pattern``: Set the pattern fill properties of the axis. See
+  :ref:`chart_formatting_pattern`.
 
 * ``gradient``: Set the gradient fill properties of the axis. See
   :ref:`chart_formatting_gradient`.
@@ -378,7 +388,12 @@ the axis types.
 * ``interval_unit``: Set the interval unit for a category axis. Should be an
   integer value. (Applicable to category axes only.)::
 
-    chart.set_x_axis({'interval_unit': 2})
+    chart.set_x_axis({'interval_unit': 5})
+
+* ``interval_tick``: Set the tick interval for a category axis. Should be an
+  integer value. (Applicable to category axes only.)::
+
+    chart.set_x_axis({'interval_tick': 2})
 
 * ``crossing``: Set the position where the y axis will cross the x axis.
   (Applicable to all axes.)
@@ -451,7 +466,7 @@ the axis types.
   The ``visible`` property is usually on for the X axis but it depends on the
   type of chart.
 
-  The ``line`` property sets the gridline properties such as colour and
+  The ``line`` property sets the gridline properties such as color and
   width. See :ref:`chart_formatting`.
 
 * ``minor_gridlines``: This takes the same options as ``major_gridlines``
@@ -493,6 +508,22 @@ the axis types.
 
 * ``major_unit_type``: Same as ``minor_unit_type``, see above, but for major
   axes unit types.
+
+* ``minor_tick_mark``: Set the axis minor tick mark type/position to one of
+  the following values::
+
+      none
+      inside
+      outside
+      cross   (inside and outside)
+
+  For example::
+
+      chart.set_x_axis({'major_tick_mark': 'none',
+                        'minor_tick_mark': 'inside'})
+
+* ``major_tick_mark``: Same as ``minor_tick_mark``, see above, but for major
+  axes ticks.
 
 * ``display_units``: Set the display units for the axis. This can be useful if
   the axis numbers are very large but you don't want to represent them in
@@ -799,11 +830,14 @@ In Excel the chart area is the background area behind the chart::
 
 The properties that can be set are:
 
-* ``border``: Set the border properties of the chartarea such as colour and
+* ``border``: Set the border properties of the chartarea such as color and
   style. See :ref:`chart_formatting_border`.
 
-* ``fill``: Set the solid fill properties of the chartarea such as colour. See
+* ``fill``: Set the solid fill properties of the chartarea such as color. See
   :ref:`chart_formatting_fill`.
+
+* ``pattern``: Set the pattern fill properties of the chartarea. See
+  :ref:`chart_formatting_pattern`.
 
 * ``gradient``: Set the gradient fill properties of the chartarea. See
   :ref:`chart_formatting_gradient`.
@@ -833,11 +867,14 @@ series are plotted::
 
 The properties that can be set are:
 
-* ``border``: Set the border properties of the plotarea such as colour and
+* ``border``: Set the border properties of the plotarea such as color and
   style. See :ref:`chart_formatting_border`.
 
-* ``fill``: Set the solid fill properties of the plotarea such as colour. See
+* ``fill``: Set the solid fill properties of the plotarea such as color. See
   :ref:`chart_formatting_fill`.
+
+* ``pattern``: Set the pattern fill properties of the plotarea. See
+  :ref:`chart_formatting_pattern`.
 
 * ``gradient``: Set the gradient fill properties of the plotarea. See
   :ref:`chart_formatting_gradient`.
@@ -929,8 +966,9 @@ the difference between the first and last data series::
 
     chart.set_up_down_bars()
 
-It is possible to format the up and down bars to add ``fill``, or ``gradient``
-and ``border`` properties if required. See :ref:`chart_formatting`::
+It is possible to format the up and down bars to add ``fill``, ``pattern`` or
+``gradient`` and ``border`` properties if required. See
+:ref:`chart_formatting`::
 
     chart.set_up_down_bars({
         'up': {

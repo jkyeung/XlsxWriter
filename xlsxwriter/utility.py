@@ -2,7 +2,7 @@
 #
 # Worksheet - A class for writing Excel Worksheets.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 import re
 import datetime
@@ -36,7 +36,7 @@ def xl_rowcol_to_cell(row, col, row_abs=False, col_abs=False):
 
 def xl_rowcol_to_cell_fast(row, col):
     """
-    Optimised version of the xl_rowcol_to_cell function. Only used internally.
+    Optimized version of the xl_rowcol_to_cell function. Only used internally.
 
     Args:
        row: The cell row.    Int.
@@ -257,7 +257,7 @@ def quote_sheetname(sheetname):
 
 def xl_color(color):
     # Used in conjunction with the XlsxWriter *color() methods to convert
-    # a colour name into an RGB formatted string. These colours are for
+    # a color name into an RGB formatted string. These colors are for
     # backward compatibility with older versions of Excel.
     named_colors = {
         'black': '#000000',
@@ -289,10 +289,10 @@ def xl_color(color):
 
 
 def get_rgb_color(color):
-    # Convert the user specified colour to an RGB colour.
+    # Convert the user specified color to an RGB color.
     rgb_color = xl_color(color)
 
-    # Remove leading FF from RGB colour for charts.
+    # Remove leading FF from RGB color for charts.
     rgb_color = re.sub(r'^FF', '', rgb_color)
 
     return rgb_color

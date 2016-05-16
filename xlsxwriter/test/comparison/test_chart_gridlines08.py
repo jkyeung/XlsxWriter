@@ -2,7 +2,7 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 
 from ..excel_comparsion_test import ExcelComparisonTest
@@ -55,9 +55,8 @@ class TestCompareXLSXFiles(ExcelComparisonTest):
         chart.set_y_axis({
             'major_gridlines': {'visible': 1},
             'minor_gridlines': {'visible': 1},
+            'major_tick_mark': 'cross'
         })
-
-        chart.y_axis['major_tick_mark'] = 'cross'
 
         worksheet.insert_chart('E9', chart)
 

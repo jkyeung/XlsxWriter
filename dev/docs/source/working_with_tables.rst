@@ -139,7 +139,7 @@ within the table are not supported.
 banded_rows
 -----------
 
-The ``banded_rows`` parameter can be used to create rows of alternating colour
+The ``banded_rows`` parameter can be used to create rows of alternating color
 in the table. It is on by default::
 
     # Turn off banded rows.
@@ -151,7 +151,7 @@ banded_columns
 --------------
 
 The ``banded_columns`` parameter can be used to used to create columns of
-alternating colour in the table. It is off by default::
+alternating color in the table. It is off by default::
 
     # Turn on banded columns.
     worksheet.add_table('B3:F7', {'banded_columns': True})
@@ -163,7 +163,7 @@ first_column
 
 The ``first_column`` parameter can be used to highlight the first column of the
 table. The type of highlighting will depend on the ``style`` of the table. It
-may be bold text or a different colour. It is off by default::
+may be bold text or a different color. It is off by default::
 
     # Turn on highlighting for the first column in the table.
     worksheet.add_table('B3:F7', {'first_column': True})
@@ -175,7 +175,7 @@ last_column
 
 The ``last_column`` parameter can be used to highlight the last column of the
 table. The type of highlighting will depend on the ``style`` of the table. It
-may be bold text or a different colour. It is off by default::
+may be bold text or a different color. It is off by default::
 
     # Turn on highlighting for the last column in the table.
     worksheet.add_table('B3:F7', {'last_column': True})
@@ -186,7 +186,7 @@ style
 -----
 
 The ``style`` parameter can be used to set the style of the table. Standard
-Excel table format names should be used (with matching capitalisation)::
+Excel table format names should be used (with matching capitalization)::
 
     worksheet.add_table('B3:F7', {'data': data,
                                   'style': 'Table Style Light 11'})
@@ -199,13 +199,15 @@ The default table style is 'Table Style Medium 9'.
 name
 ----
 
-The ``name`` parameter can be used to set the name of the table.
-
-By default tables are named ``Table1``, ``Table2``, etc. If you override the
-table name you must ensure that it doesn't clash with an existing table name
-and that it follows Excel's requirements for table names::
+By default tables are named ``Table1``, ``Table2``, etc. The ``name``
+parameter can be used to set the name of the table::
 
     worksheet.add_table('B3:F7', {'name': 'SalesData'})
+
+If you override the table name you must ensure that it doesn't clash with an
+existing table name and that it follows Excel's requirements for table names,
+see the `Microsoft Office documentation
+<http://office.microsoft.com/en-001/excel-help/define-and-use-names-in-formulas-HA010147120.aspx>`_.
 
 If you need to know the name of the table, for example to use it in a formula,
 you can get it as follows::
@@ -241,6 +243,8 @@ The sub-properties that can be set are:
 
 +----------------+
 | header         |
++----------------+
+| header_format  |
 +----------------+
 | formula        |
 +----------------+
@@ -363,28 +367,29 @@ automatically. This is similar to setting the ``value`` optional property in
                             'total_function': 'sum',
                             'total_value': 807}]}
 
-Formats can also be applied to columns::
+Formatting can also be applied to columns, to the column data using ``format`` and to the header using ``header_format``::
 
-    currency_format = workbook.add_format(num_format, '$#,##0')
+
+    currency_format = workbook.add_format({'num_format': '$#,##0'})
+    wrap_format     = workbook.add_format({'text_wrap': 1})
 
     worksheet.add_table('B3:D8', {'data': data,
                                   'total_row': 1,
                                   'columns': [{'header': 'Product'},
                                               {'header': 'Quarter 1',
                                                'total_function': 'sum',
-                                               'format': currency_format,
-                                               },
+                                               'format': currency_format},
                                               {'header': 'Quarter 2',
+                                               'header_format': wrap_format,
                                                'total_function': 'sum',
-                                               'format': currency_format,
-                                               },
-                                              ]})
+                                               'format': currency_format}]})
 
 .. image:: _images/tables12.png
 
 Standard XlsxWriter :ref:`Format object <format>` objects are used for this
-formatting. However, they should be limited to numerical formats. Overriding
-other table formatting may produce inconsistent results.
+formatting. However, they should be limited to numerical formats for the
+columns and simple formatting like text wrap for the headers. Overriding other
+table formatting may produce inconsistent results.
 
 
 Example

@@ -567,10 +567,12 @@ follows::
 
 The available min/mid/max types are::
 
+    min        (for min_type only)
     num
     percent
     percentile
     formula
+    max        (for max_type only)
 
 
 mid_type:
@@ -622,8 +624,8 @@ properties are used as follows::
                                             'min_color': '#C5D9F1',
                                             'max_color': '#538ED5'})
 
-The colour can be a Html style ``#RRGGBB`` string or a limited number named
-colours, see :ref:`colors`.
+The color can be a Html style ``#RRGGBB`` string or a limited number named
+colors, see :ref:`colors`.
 
 mid_color:
 **********
@@ -649,7 +651,7 @@ non-contiguous ranges.
 
 It is possible to apply the conditional format to different cell ranges in a
 worksheet using multiple calls to ``conditional_format()``. However, as a
-minor optimisation it is also possible in Excel to apply the same conditional
+minor optimization it is also possible in Excel to apply the same conditional
 format to different non-contiguous cell ranges.
 
 This is replicated in ``conditional_format()`` using the ``multi_range``
@@ -732,4 +734,3 @@ Highlight blank cells::
                                             'format': format1})
 
 See also :ref:`ex_cond_format`.
-

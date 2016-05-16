@@ -2,7 +2,7 @@
 #
 # Tests for XlsxWriter.
 #
-# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 
 import unittest
@@ -39,7 +39,7 @@ class TestAssembleTable(unittest.TestCase):
                                                     'format': dxf_format,
                                                     'formula': 'SUM(Table1[[#This Row],[Column1]:[Column3]])'},
                                                    ]})
-        worksheet._prepare_tables(1)
+        worksheet._prepare_tables(1, {})
 
         fh = StringIO()
         table = Table()

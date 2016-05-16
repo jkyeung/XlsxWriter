@@ -2,7 +2,7 @@
 #
 # Python 2/3 compatibility functions for XlsxWriter.
 #
-# Copyright (c), 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright (c), 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 
 import sys
@@ -42,3 +42,11 @@ if sys.version_info < (2, 6, 0):
     from StringIO import StringIO as BytesIO
 else:
     from io import BytesIO as BytesIO
+
+
+def force_unicode(string):
+    """Return string as a native string"""
+    if sys.version_info[0] == 2:
+        if isinstance(string, unicode):
+            return string.encode('utf-8')
+    return string

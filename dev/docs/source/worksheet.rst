@@ -225,7 +225,7 @@ parameter is optional but when present is should be a valid
 worksheet.write_formula()
 -------------------------
 
-.. py:function:: write_formula(row, col, formula[, cell_format[, result]])
+.. py:function:: write_formula(row, col, formula[, cell_format[, value]])
 
    Write a formula to a worksheet cell.
 
@@ -233,7 +233,7 @@ worksheet.write_formula()
    :param col:         The cell column (zero indexed).
    :param formula:     Formula to write to cell.
    :param cell_format: Optional Format object.
-   :param result:      Optional result. The value if the formula was calculated.
+   :param value:       Optional result. The value if the formula was calculated.
    :type  row:         int
    :type  col:         int
    :type  formula:     string
@@ -262,61 +262,40 @@ The ``cell_format`` parameter is used to apply formatting to the cell. This
 parameter is optional but when present is should be a valid
 :ref:`Format <format>` object.
 
-XlsxWriter doesn't calculate the result of a formula and instead stores the
-value 0 as the formula result. It then sets a global flag in the XLSX file to
-say that all formulas and functions should be recalculated when the file is
-opened. This is the method recommended in the Excel documentation and in
-general it works fine with spreadsheet applications. However, applications
-that don't have a facility to calculate formulas, such as Excel Viewer, or
-some mobile applications will only display the 0 results.
-
 If required, it is also possible to specify the calculated result of the
-formula using the optional ``result`` parameter. This is occasionally
+formula using the optional ``value`` parameter. This is occasionally
 necessary when working with non-Excel applications that don't calculate the
 result of the formula::
 
     worksheet.write('A1', '=2+2', num_format, 4)
 
-The ``result`` parameter can be a number, a string, a bool or one of the
-following Excel error codes::
-
-    #DIV/0!
-    #N/A
-    #NAME?
-    #NULL!
-    #NUM!
-    #REF!
-    #VALUE!
+See :ref:`formula_result` for more details.
 
 Excel stores formulas in US style formatting regardless of the Locale or
-Language of the Excel version. Therefore all formula names written using
-XlsxWriter must be in English (use the following
-`formula translator <http://fr.excel-translator.de>`_ if necessary). Also,
-formulas must be written with the US style separator/range operator which is a
-comma (not semi-colon). Therefore a formula with multiple values should be
-written as follows::
+Language of the Excel version::
 
-    worksheet.write_formula('A1', '=SUM(1, 2, 3)')  # OK
-    worksheet.write_formula('A2', '=SUM(1; 2; 3)')  # NO. Error on load.
+    worksheet.write_formula('A1', '=SUM(1, 2, 3)')    # OK
+    worksheet.write_formula('A2', '=SOMME(1, 2, 3)')  # French. Error on load.
+
+See :ref:`formula_syntax` for a full explanation.
 
 Excel 2010 and 2013 added functions which weren't defined in the original file
 specification. These functions are referred to as *future* functions. Examples
 of these functions are ``ACOT``, ``CHISQ.DIST.RT`` , ``CONFIDENCE.NORM``,
-``STDEV.P``, ``STDEV.S`` and ``WORKDAY.INTL``. The full list is given in the
-`MS XLSX extensions documentation on future functions <http://msdn.microsoft.com/en-us/library/dd907480%28v=office.12%29.aspx>`_.
-
-When written using ``write_formula()`` these functions need to be fully
-qualified with the ``_xlfn.`` prefix as they are shown in the MS XLSX
-documentation link above. For example::
+``STDEV.P``, ``STDEV.S`` and ``WORKDAY.INTL``. In XlsxWriter these require a
+prefix::
 
     worksheet.write_formula('A1', '=_xlfn.STDEV.S(B1:B10)')
+
+See :ref:`formula_future` for a detailed explanation and full list of
+functions that are affected.
 
 
 worksheet.write_array_formula()
 -------------------------------
 
 .. py:function:: write_array_formula(first_row, first_col, last_row, \
-                                    last_col, formula[, cell_format[, result]])
+                                    last_col, formula[, cell_format[, value]])
 
    Write an array formula to a worksheet cell.
 
@@ -326,7 +305,7 @@ worksheet.write_array_formula()
    :param last_col:    The last col of the range.
    :param formula:     Array formula to write to cell.
    :param cell_format: Optional Format object.
-   :param result:      Optional result. The value if the formula was calculated.
+   :param value:       Optional result. The value if the formula was calculated.
    :type  first_row:   int
    :type  first_col:   int
    :type  last_row:    int
@@ -334,7 +313,7 @@ worksheet.write_array_formula()
    :type  formula:     string
    :type  cell_format: :ref:`Format <format>`
 
-The ``write_array_formula()`` method write an array formula to a cell range. In
+The ``write_array_formula()`` method writes an array formula to a cell range. In
 Excel an array formula is a formula that performs a calculation on a set of
 values. It can return a single value or a range of values.
 
@@ -367,10 +346,10 @@ parameter is optional but when present is should be a valid
 :ref:`Format <format>` object.
 
 If required, it is also possible to specify the calculated result of the
-formula. This is occasionally necessary when working with non-Excel
-applications that don't calculate the result of the formula::
-
-    worksheet.write_array_formula('A1:A3', '{=TREND(C1:C3,B1:B3)}', format, 105)
+formula (see discussion of formulas and the ``value`` parameter for the
+``write_formula()`` method above). However, using this parameter only writes a
+single value to the upper left cell in the result array. See
+:ref:`formula_result` for more details.
 
 See also :ref:`ex_array_formula`.
 
@@ -537,9 +516,9 @@ Four web style URI's are supported: ``http://``, ``https://``, ``ftp://`` and
     worksheet.write_url('A1', 'ftp://www.python.org/')
     worksheet.write_url('A2', 'http://www.python.org/')
     worksheet.write_url('A3', 'https://www.python.org/')
-    worksheet.write_url('A4', 'mailto:jmcnamaracpan.org')
+    worksheet.write_url('A4', 'mailto:jmcnamara@cpan.org')
 
-All of the these URI types are recognised by the :func:`write()` method, so the
+All of the these URI types are recognized by the :func:`write()` method, so the
 following are equivalent::
 
     worksheet.write_url('A2', 'http://www.python.org/')
@@ -606,6 +585,9 @@ See also :ref:`ex_hyperlink`.
    by Excel: ``\s " < > \ [ ] ` ^ { }`` unless the URL already contains ``%xx``
    style escapes. In which case it is assumed that the URL was escaped
    correctly by the user and will by passed directly to Excel.
+
+.. note::
+   Excel limits hyperlink links and anchor/locations to 255 characters each.
 
 
 worksheet.write_rich_string()
@@ -879,12 +861,18 @@ Examples::
     worksheet.set_column('E:E', 20)  # Column  E   width set to 20.
     worksheet.set_column('F:H', 30)  # Columns F-H width set to 30.
 
-The width corresponds to the column width value that is specified in Excel. It
-is approximately equal to the length of a string in the default font of
-Calibri 11. Unfortunately, there is no way to specify "AutoFit" for a column
-in the Excel file format. This feature is only available at runtime from
-within Excel. It is possible to simulate "AutoFit" by tracking the width of
-the data in the column as your write it.
+The ``width`` parameter sets the column width in the same units used by Excel
+which is: the number of characters in the default font. The default width is
+8.43 in the default font of Calibri 11. The actual relationship between a
+string width and a column width in Excel is complex. See the `following
+explanation of column widths <https://support.microsoft.com/en-us/kb/214123>`_
+from the Microsoft support documentation for more details.
+
+There is no way to specify "AutoFit" for a column in the Excel file
+format. This feature is only available at runtime from within Excel. It is
+possible to simulate "AutoFit" in your application by tracking the maximum
+width of the data in the column as your write it and then adjusting the column
+width at the end.
 
 As usual the ``cell_format`` :ref:`Format <format>`  parameter is optional. If
 you wish to set the format without changing the width you can pass ``None`` as
@@ -954,7 +942,7 @@ worksheet.insert_image()
 
 .. py:function:: insert_image(row, col, image[, options])
 
-   Write a string to a worksheet cell.
+   Insert an image in a worksheet cell.
 
    :param row:         The cell row (zero indexed).
    :param col:         The cell column (zero indexed).
@@ -1048,11 +1036,9 @@ Where ``positioning`` has the following allowable values:
   explicitly set the height of the row using ``set_row()`` if it crosses an
   inserted image.
 
-Inserting images into headers or a footers isn't supported.
-
 BMP images are only supported for backward compatibility. In general it is best
 to avoid BMP images since they aren't compressed. If used, BMP images must be
-24 bit, true colour, bitmaps.
+24 bit, true color, bitmaps.
 
 See also :ref:`ex_insert_image`.
 
@@ -1370,6 +1356,11 @@ This method contains a lot of parameters and is described in :ref:`tables`.
 
 See also :ref:`ex_tables`.
 
+.. Note::
+
+   Tables aren't available in XlsxWriter when :func:`Workbook`
+   ``'constant_memory'`` mode is enabled.
+
 
 worksheet.add_sparkline()
 -------------------------
@@ -1442,7 +1433,7 @@ example::
     worksheet.write_comment('C3', 'Hello', {'x_scale': 1.2, 'y_scale': 0.8})
 
 Most of these options are quite specific and in general the default comment
-behaviour will be all that you need. However, should you need greater control
+behavior will be all that you need. However, should you need greater control
 over the format of the cell comment the following options are available::
 
     author
@@ -1641,7 +1632,7 @@ worksheet.merge_range()
 The ``merge_range()`` method allows cells to be merged together so that they
 act as a single area.
 
-Excel generally merges and centers cells at same time. To get similar behaviour
+Excel generally merges and centers cells at same time. To get similar behavior
 with XlsxWriter you need to apply a :ref:`Format <format>`::
 
     merge_format = workbook.add_format({'align': 'center'})
@@ -1672,6 +1663,11 @@ first cell with a call to one of the other
 <format>` as in the merged cells. See :ref:`ex_merge_rich`.
 
 .. image:: _images/merge_rich.png
+
+.. Note::
+
+   Merged ranges generally don't work in XlsxWriter when :func:`Workbook`
+   ``'constant_memory'`` mode is enabled.
 
 
 worksheet.autofilter()
@@ -1922,7 +1918,7 @@ worksheet.right_to_left()
 
 The ``right_to_left()`` method is used to change the default direction of the
 worksheet from left-to-right, with the A1 cell in the top left, to
-right-to-left, with the A1 cell in the top right.
+right-to-left, with the A1 cell in the top right::
 
     worksheet.right_to_left()
 
@@ -1948,18 +1944,18 @@ worksheet.set_tab_color()
 
 .. py:function:: set_tab_color()
 
-   Set the colour of the worksheet tab.
+   Set the color of the worksheet tab.
 
    :param string color: The tab color.
 
-The ``set_tab_color()`` method is used to change the colour of the worksheet
+The ``set_tab_color()`` method is used to change the color of the worksheet
 tab::
 
     worksheet1.set_tab_color('red')
     worksheet2.set_tab_color('#FF9900')  # Orange
 
-The colour can be a Html style ``#RRGGBB`` string or a limited number named
-colours, see :ref:`colors`.
+The color can be a Html style ``#RRGGBB`` string or a limited number named
+colors, see :ref:`colors`.
 
 See :ref:`ex_tab_colors` for more details.
 
@@ -2017,7 +2013,7 @@ dictionary in the ``options`` argument with any or all of the following keys::
 The default boolean values are shown above. Individual elements can be
 protected as follows::
 
-    worksheet.protect('acb123', { 'insert_rows': 1 })
+    worksheet.protect('abc123', { 'insert_rows': 1 })
 
 See also the :func:`set_locked` and :func:`set_hidden` format methods and
 :ref:`ex_protection`.
@@ -2042,7 +2038,7 @@ worksheet.set_default_row()
 
 The ``set_default_row()`` method is used to set the limited number of default
 row properties allowed by Excel which are the default height and the option to
-hide unused rows. These parameters are an optimisation used by Excel to set
+hide unused rows. These parameters are an optimization used by Excel to set
 row properties without generating a very large file with an entry for each row.
 
 To set the default row height::

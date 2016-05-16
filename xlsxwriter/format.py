@@ -2,7 +2,7 @@
 #
 # Format - A class for writing the Excel XLSX Worksheet file.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 
 # Package imports.
@@ -67,7 +67,6 @@ class Format(xmlwriter.XMLwriter):
         self.text_v_align = 0
         self.text_justlast = 0
         self.rotation = 0
-        self.center_across = 0
 
         self.fg_color = 0
         self.bg_color = 0
@@ -333,18 +332,15 @@ class Format(xmlwriter.XMLwriter):
         if alignment == 'vdistributed':
             self.set_text_v_align(5)
 
-    def set_center_across(self, center_across=1):
+    def set_center_across(self):
         """
         Set the Format center_across property.
-
-        Args:
-            center_across: Default is 1, turns property on.
 
         Returns:
             Nothing.
 
         """
-        self.center_across = center_across
+        self.set_text_h_align(6)
 
     def set_text_wrap(self, text_wrap=1):
         """
@@ -375,7 +371,7 @@ class Format(xmlwriter.XMLwriter):
         # Map user angle to Excel angle.
         if rotation == 270:
             rotation = 255
-        elif rotation >= -90 or rotation <= 90:
+        elif -90 <= rotation <= 90:
             if rotation < 0:
                 rotation = -rotation + 90
         else:
@@ -441,7 +437,7 @@ class Format(xmlwriter.XMLwriter):
         Set the Format bg_color property.
 
         Args:
-            bg_color: Background colour. No default.
+            bg_color: Background color. No default.
 
         Returns:
             Nothing.
@@ -454,7 +450,7 @@ class Format(xmlwriter.XMLwriter):
         Set the Format fg_color property.
 
         Args:
-            fg_color: Foreground colour. No default.
+            fg_color: Foreground color. No default.
 
         Returns:
             Nothing.
@@ -690,7 +686,6 @@ class Format(xmlwriter.XMLwriter):
 
     def set_font_family(self, font_family):
         # Set the Format font_family property.
-
         self.font_family = font_family
 
     def set_font_charset(self, font_charset):
@@ -956,7 +951,7 @@ class Format(xmlwriter.XMLwriter):
 
     def _get_color(self, color):
         # Used in conjunction with the set_xxx_color methods to convert a
-        # colour name into an RGB formatted string. These colours are for
+        # color name into an RGB formatted string. These colors are for
         # backward compatibility with older versions of Excel.
         named_colors = {
             'black': '#000000',

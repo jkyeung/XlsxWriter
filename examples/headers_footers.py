@@ -33,7 +33,7 @@
 #
 # See the main XlsxWriter documentation for more information.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 import xlsxwriter
 
@@ -45,7 +45,7 @@ preview = 'Select Print Preview to see the header and footer'
 # A simple example to start
 #
 worksheet1 = workbook.add_worksheet('Simple')
-header1 = '&CHere is some centred text.'
+header1 = '&CHere is some centered text.'
 footer1 = '&LHere is some left aligned text.'
 
 worksheet1.set_header(header1)

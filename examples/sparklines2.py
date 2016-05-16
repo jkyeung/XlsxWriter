@@ -6,7 +6,7 @@
 # used to show trends in data. This example shows the majority of
 # options that can be applied to sparklines.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 import xlsxwriter
 
@@ -188,7 +188,7 @@ row += 1
 
 ###############################################################################
 #
-text = 'Column with a user defined colour.'
+text = 'Column with a user defined color.'
 
 worksheet1.add_sparkline('A18', {'range': 'Sheet2!A2:J2',
                                  'type': 'column',

@@ -2,12 +2,12 @@
 #
 # Packager - A class for writing the Excel XLSX Worksheet file.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 
 # Standard packages.
 import os
-import sys
+import stat
 import tempfile
 from shutil import copy
 
@@ -86,7 +86,6 @@ class Packager(object):
         self.tmpdir = ''
         self.in_memory = False
         self.workbook = None
-        self.sheet_names = []
         self.worksheet_count = 0
         self.chartsheet_count = 0
         self.chart_count = 0
@@ -114,7 +113,6 @@ class Packager(object):
     def _add_workbook(self, workbook):
         # Add the Excel::Writer::XLSX::Workbook object to the package.
         self.workbook = workbook
-        self.sheet_names = workbook.sheetnames
         self.chart_count = len(workbook.charts)
         self.drawing_count = len(workbook.drawings)
         self.num_vml_files = workbook.num_vml_files
@@ -208,6 +206,12 @@ class Packager(object):
 
         index = 1
         for chart in self.workbook.charts:
+            # Check that the chart has at least one data series.
+            if not chart.series:
+                raise Exception("Chart%d must contain at least one "
+                                "data series. See chart.add_series()."
+                                % index)
+
             chart._set_xml_writer(self._filename('xl/charts/chart'
                                                  + str(index) + '.xml'))
             chart._assemble_xml_file()
@@ -579,6 +583,12 @@ class Packager(object):
                 else:
                     copy(filename, os_filename)
 
+                    # Allow copies of Windows read-only images to be deleted.
+                    try:
+                        os.chmod(os_filename,
+                                 os.stat(os_filename).st_mode | stat.S_IWRITE)
+                    except:
+                        pass
             else:
                 # For in-memory mode we read the image into a stream.
                 if image_data:

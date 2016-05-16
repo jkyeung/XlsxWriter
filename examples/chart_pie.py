@@ -2,13 +2,13 @@
 #
 # An example of creating Excel Pie charts with Python and XlsxWriter.
 #
-# The demo also shows how to set segment colours. It is possible to
+# The demo also shows how to set segment colors. It is possible to
 # define chart colors for most types of XlsxWriter charts
 # via the add_series() method. However, Pie/Doughnut charts are a special
 # case since each segment is represented as a point so it is necessary to
 # assign formatting to each point in the series.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 import xlsxwriter
 
@@ -58,11 +58,11 @@ worksheet.insert_chart('C2', chart1, {'x_offset': 25, 'y_offset': 10})
 # Create an example Pie chart like above.
 chart2 = workbook.add_chart({'type': 'pie'})
 
-# Configure the series and add user defined segment colours.
+# Configure the series and add user defined segment colors.
 chart2.add_series({
     'name': 'Pie sales data',
-    'categories': '=Sheet1!A2:A4',
-    'values':     '=Sheet1!B2:B4',
+    'categories': '=Sheet1!$A$2:$A$4',
+    'values':     '=Sheet1!$B$2:$B$4',
     'points': [
         {'fill': {'color': '#5ABA10'}},
         {'fill': {'color': '#FE110E'}},
@@ -87,8 +87,8 @@ chart3 = workbook.add_chart({'type': 'pie'})
 # Configure the series.
 chart3.add_series({
     'name': 'Pie sales data',
-    'categories': '=Sheet1!A2:A4',
-    'values':     '=Sheet1!B2:B4',
+    'categories': '=Sheet1!$A$2:$A$4',
+    'values':     '=Sheet1!$B$2:$B$4',
 })
 
 # Add a title.

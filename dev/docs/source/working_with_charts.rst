@@ -91,6 +91,7 @@ The following properties can be set for ``marker`` formats in a chart::
     size
     border
     fill
+    pattern
     gradient
 
 The ``type`` property sets the type of marker that is used with a series::
@@ -615,6 +616,7 @@ elements::
     line
     border
     fill
+    pattern
     gradient
 
 Chart formatting properties are generally set using dicts::
@@ -680,9 +682,9 @@ The ``color`` property sets the color of the ``line``::
         'line':   {'color': 'red'},
     })
 
-The available colours are shown in the main XlsxWriter documentation. It is
-also possible to set the colour of a line with a Html style ``#RRGGBB`` string
-or a limited number of named colours, see :ref:`colors`::
+The available colors are shown in the main XlsxWriter documentation. It is
+also possible to set the color of a line with a Html style ``#RRGGBB`` string
+or a limited number of named colors, see :ref:`colors`::
 
     chart.add_series({
         'values': '=Sheet1!$A$1:$A$6',
@@ -763,6 +765,7 @@ The following properties can be set for ``fill`` formats in a chart::
 
     none
     color
+    transparency
 
 The ``none`` property is used to turn the ``fill`` property off (it is
 generally on by default)::
@@ -776,7 +779,7 @@ generally on by default)::
 .. image:: _images/chart_fill1.png
    :scale: 75 %
 
-The ``color`` property sets the colour of the ``fill`` area::
+The ``color`` property sets the color of the ``fill`` area::
 
     chart.add_series({
         'values': '=Sheet1!$A$1:$A$6',
@@ -784,9 +787,9 @@ The ``color`` property sets the colour of the ``fill`` area::
     })
 
 
-The available colours are shown in the main XlsxWriter documentation. It is
-also possible to set the colour of a fill with a Html style ``#RRGGBB`` string
-or a limited number of named colours, see :ref:`colors`::
+The available colors are shown in the main XlsxWriter documentation. It is
+also possible to set the color of a fill with a Html style ``#RRGGBB`` string
+or a limited number of named colors, see :ref:`colors`::
 
     chart.add_series({
         'values': '=Sheet1!$A$1:$A$6',
@@ -796,6 +799,12 @@ or a limited number of named colours, see :ref:`colors`::
 .. image:: _images/chart_fill2.png
    :scale: 75 %
 
+
+The ``transparency`` property sets the transparency of the solid fill color in
+the integer range 1 - 100::
+
+    chart.set_chartarea({'fill': {'color': 'yellow', 'transparency': 75}})
+
 The ``fill`` format is generally used in conjunction with a ``border`` format
 which has the same properties as a ``line`` format::
 
@@ -804,6 +813,97 @@ which has the same properties as a ``line`` format::
         'fill':   {'color': 'red'},
         'border': {'color': 'black'}
     })
+
+
+.. _chart_formatting_pattern:
+
+Chart formatting: Pattern Fill
+------------------------------
+
+The pattern fill format is used to specify pattern filled areas of chart
+objects such as the interior of a column or the background of the chart
+itself.
+
+.. image:: _images/chart_pattern.png
+   :scale: 75 %
+
+The following properties can be set for ``pattern`` fill formats in a chart::
+
+    pattern:   the pattern to be applied (required)
+    fg_color:  the foreground color of the pattern (required)
+    bg_color:  the background color (optional, defaults to white)
+
+
+For example::
+
+    chart.set_plotarea({
+        'pattern': {
+            'pattern': 'percent_5',
+            'fg_color': 'red',
+            'bg_color': 'yellow',
+        }
+    })
+
+The following patterns can be applied:
+
+* ``percent_5``
+* ``percent_10``
+* ``percent_20``
+* ``percent_25``
+* ``percent_30``
+* ``percent_40``
+* ``percent_50``
+* ``percent_60``
+* ``percent_70``
+* ``percent_75``
+* ``percent_80``
+* ``percent_90``
+* ``light_downward_diagonal``
+* ``light_upward_diagonal``
+* ``dark_downward_diagonal``
+* ``dark_upward_diagonal``
+* ``wide_downward_diagonal``
+* ``wide_upward_diagonal``
+* ``light_vertical``
+* ``light_horizontal``
+* ``narrow_vertical``
+* ``narrow_horizontal``
+* ``dark_vertical``
+* ``dark_horizontal``
+* ``dashed_downward_diagonal``
+* ``dashed_upward_diagonal``
+* ``dashed_horizontal``
+* ``dashed_vertical``
+* ``small_confetti``
+* ``large_confetti``
+* ``zigzag``
+* ``wave``
+* ``diagonal_brick``
+* ``horizontal_brick``
+* ``weave``
+* ``plaid``
+* ``divot``
+* ``dotted_grid``
+* ``dotted_diamond``
+* ``shingle``
+* ``trellis``
+* ``sphere``
+* ``small_grid``
+* ``large_grid``
+* ``small_check``
+* ``large_check``
+* ``outlined_diamond``
+* ``solid_diamond``
+
+
+The foreground color, ``fg_color``, is a required parameter and can be a Html
+style ``#RRGGBB`` string or a limited number of named colors, see
+:ref:`colors`.
+
+The background color, ``bg_color``, is optional and defaults to black.
+
+If a pattern fill is used on a chart object it overrides the solid fill
+properties of the object.
 
 
 .. _chart_formatting_gradient:
@@ -825,21 +925,18 @@ The following properties can be set for ``gradient`` fill formats in a chart::
     type:      the optional type of gradient fill
     angle:     the optional angle of the linear fill
 
-If gradient fill is used on a chart object it overrides the solid fill
-properties of the object.
-
-The ``colors`` property sets a list of colours that define the ``gradient``::
+The ``colors`` property sets a list of colors that define the ``gradient``::
 
     chart.set_plotarea({
         'gradient': {'colors': ['#FFEFD1', '#F0EBD5', '#B69F66']}
     })
 
-Excel allows between 2 and 10 colours in a gradient but it is unlikely that
+Excel allows between 2 and 10 colors in a gradient but it is unlikely that
 you will require more than 2 or 3.
 
-As with solid fill it is also possible to set the colours of a gradient with a
-Html style ``#RRGGBB`` string or a limited number of named colours, see
-:ref:`colors`::
+As with solid or pattern fill it is also possible to set the colors of a
+gradient with a Html style ``#RRGGBB`` string or a limited number of named
+colors, see :ref:`colors`::
 
     chart.add_series({
         'values':   '=Sheet1!$A$1:$A$6',
@@ -847,7 +944,7 @@ Html style ``#RRGGBB`` string or a limited number of named colours, see
     })
 
 The ``positions`` defines an optional list of positions, between 0 and 100, of
-where the colours in the gradient are located. Default values are provided for
+where the colors in the gradient are located. Default values are provided for
 ``colors`` lists of between 2 and 4 but they can be specified if required::
 
     chart.add_series({
@@ -887,6 +984,9 @@ For a ``linear`` fill the angle of the gradient can also be specified::
     })
 
 The default angle is 90 degrees.
+
+If gradient fill is used on a chart object it overrides the solid fill and
+pattern fill properties of the object.
 
 
 .. _chart_fonts:
@@ -941,7 +1041,7 @@ The following explains the available font properties:
   format.
 
 * ``color``: Set the font color property. Can be a color index, a color name
-  or HTML style RGB colour::
+  or HTML style RGB color::
 
     chart.set_x_axis({'num_font': {'color': 'red' }})
     chart.set_y_axis({'num_font': {'color': '#92D050'}})
@@ -1276,6 +1376,48 @@ are comprised of a single chart:
 .. image:: _images/chartsheet.png
 
 See :ref:`chartsheet` for details.
+
+
+.. _charts_from_tables:
+
+Charts from Worksheet Tables
+----------------------------
+
+Charts can by created from :ref:`Worksheet Tables <tables>`. However, Excel
+has a limitation where the data series ``name``, if specified, must refer to a
+cell within the table (usually one of the headers).
+
+To workaround this Excel limitation you can specify a user defined name in the
+table and refer to that from the chart::
+
+    import xlsxwriter
+
+    workbook = xlsxwriter.Workbook('chart_pie.xlsx')
+
+    worksheet = workbook.add_worksheet()
+
+    data = [
+        ['Apple',  60],
+        ['Cherry', 30],
+        ['Pecan',  10],
+    ]
+
+    worksheet.add_table('A1:B4', {'data': data,
+                                  'columns': [{'header': 'Types'},
+                                             {'header': 'Number'}]}
+    )
+
+    chart = workbook.add_chart({'type': 'pie'})
+
+    chart.add_series({
+        'name':       '=Sheet1!$A$1',
+        'categories': '=Sheet1!$A$2:$A$4',
+        'values':     '=Sheet1!$B$2:$B$4',
+    })
+
+    worksheet.insert_chart('D2', chart)
+
+    workbook.close()
 
 
 Chart Limitations

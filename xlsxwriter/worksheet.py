@@ -2,7 +2,7 @@
 #
 # Worksheet - A class for writing the Excel XLSX Worksheet file.
 #
-# Copyright 2013-2015, John McNamara, jmcnamara@cpan.org
+# Copyright 2013-2016, John McNamara, jmcnamara@cpan.org
 #
 
 # Standard packages.
@@ -17,6 +17,7 @@ from warnings import warn
 from .compatibility import StringIO
 from .compatibility import defaultdict
 from .compatibility import namedtuple
+from .compatibility import force_unicode
 from .compatibility import num_types, str_types
 
 # Package imports.
@@ -464,7 +465,7 @@ class Worksheet(xmlwriter.XMLwriter):
             string = string[:self.xls_strmax]
             str_error = -2
 
-        # Write a shared string or an in-line string in optimisation mode.
+        # Write a shared string or an in-line string in optimization mode.
         if self.optimization == 0:
             string_index = self.str_table._get_shared_string_index(string)
         else:
@@ -757,27 +758,28 @@ class Worksheet(xmlwriter.XMLwriter):
             -3: URL longer than Excel limit of 255 characters
             -4: Exceeds Excel limit of 65,530 urls per worksheet
         """
-        # Default link type such as http://.
+        # Set the displayed string to the URL unless defined by the user.
+        if string is None:
+            string = url
+
+        # Default to external link type such as 'http://' or 'external:'.
         link_type = 1
 
         # Remove the URI scheme from internal links.
         if re.match("internal:", url):
             url = url.replace('internal:', '')
+            string = string.replace('internal:', '')
             link_type = 2
 
-        # Remove the URI scheme from external links.
+        # Remove the URI scheme from external links and change the directory
+        # separator from Unix to Dos.
+        external = False
         if re.match("external:", url):
             url = url.replace('external:', '')
-            link_type = 3
-
-        # Set the displayed string to the URL unless defined by the user.
-        if string is None:
-            string = url
-
-        # For external links change the directory separator from Unix to Dos.
-        if link_type == 3:
             url = url.replace('/', '\\')
+            string = string.replace('external:', '')
             string = string.replace('/', '\\')
+            external = True
 
         # Strip the mailto header.
         string = string.replace('mailto:', '')
@@ -799,50 +801,32 @@ class Worksheet(xmlwriter.XMLwriter):
         # External links to URLs and to other Excel workbooks have slightly
         # different characteristics that we have to account for.
         if link_type == 1:
-            # Escape URL unless it looks already escaped.
-            if not re.search('%[0-9a-fA-F]{2}', url):
-                # Can't use url.quote() here because it doesn't match Excel.
-                url = url.replace('%', '%25')
-                url = url.replace('"', '%22')
-                url = url.replace(' ', '%20')
-                url = url.replace('<', '%3c')
-                url = url.replace('>', '%3e')
-                url = url.replace('[', '%5b')
-                url = url.replace(']', '%5d')
-                url = url.replace('^', '%5e')
-                url = url.replace('`', '%60')
-                url = url.replace('{', '%7b')
-                url = url.replace('}', '%7d')
 
-            # Ordinary URL style external links don't have a "location" string.
-            url_str = None
-
-        elif link_type == 3:
-
-            # External Workbook links need to be modified into correct format.
-            # The URL will look something like 'c:\temp\file.xlsx#Sheet!A1'.
-            # We need the part to the left of the # as the URL and the part to
-            # the right as the "location" string (if it exists).
-            if re.search('#', url):
-                url, url_str = url.split('#')
+            # Split url into the link and optional anchor/location.
+            if '#' in url:
+                url, url_str = url.split('#', 1)
             else:
                 url_str = None
 
-            # Add the file:/// URI to the url if non-local.
-            # Windows style "C:/" link. # Network share.
+            url = self._escape_url(url)
+
+            if url_str is not None and not external:
+                url_str = self._escape_url(url_str)
+
+            # Add the file:/// URI to the url for Windows style "C:/" link and
+            # Network shares.
             if re.match('\w:', url) or re.match(r'\\', url):
                 url = 'file:///' + url
 
             # Convert a .\dir\file.xlsx link to dir\file.xlsx.
             url = re.sub(r'^\.\\', '', url)
 
-            # Treat as a default external link now the data has been modified.
-            link_type = 1
-
-        # Excel limits escaped URL to 255 characters.
-        if len(url) > 255:
-            warn("Ignoring URL '%s' > 255 characters since it exceeds "
-                 "Excel's limit for URLS" % url)
+        # Excel limits the escaped URL and location/anchor to 255 characters.
+        tmp_url_str = url_str or ''
+        if len(url) > 255 or len(tmp_url_str) > 255:
+            warn("Ignoring URL '%s' with link or location/anchor > 255 "
+                 "characters since it exceeds Excel's limit for URLS" %
+                 force_unicode(url))
             return -3
 
         # Check the limit of URLS per worksheet.
@@ -850,7 +834,7 @@ class Worksheet(xmlwriter.XMLwriter):
 
         if self.hlink_count > 65530:
             warn("Ignoring URL '%s' since it exceeds Excel's limit of "
-                 "65,530 URLS per worksheet." % url)
+                 "65,530 URLS per worksheet." % force_unicode(url))
             return -5
 
         # Write previous row if in in-line string optimization mode.
@@ -972,7 +956,7 @@ class Worksheet(xmlwriter.XMLwriter):
         if str_length > self.xls_strmax:
             return -2
 
-        # Write a shared string or an in-line string in optimisation mode.
+        # Write a shared string or an in-line string in optimization mode.
         if self.optimization == 0:
             string_index = self.str_table._get_shared_string_index(string)
         else:
@@ -1055,7 +1039,7 @@ class Worksheet(xmlwriter.XMLwriter):
         image_data = options.get('image_data', None)
 
         if not image_data and not os.path.exists(filename):
-            warn("Image file '%s' not found." % filename)
+            warn("Image file '%s' not found." % force_unicode(filename))
             return -1
 
         self.images.append([row, col, filename, x_offset, y_offset,
@@ -1332,7 +1316,7 @@ class Worksheet(xmlwriter.XMLwriter):
                                            cell_format, hidden, level,
                                            collapsed]
 
-        # Store the column change to allow optimisations.
+        # Store the column change to allow optimizations.
         self.col_size_changed = True
 
         # Store the col sizes for use when calculating image vertices taking
@@ -1399,7 +1383,7 @@ class Worksheet(xmlwriter.XMLwriter):
         # Store the row properties.
         self.set_rows[row] = [height, cell_format, hidden, level, collapsed]
 
-        # Store the row change to allow optimisations.
+        # Store the row change to allow optimizations.
         self.row_size_changed = True
 
         if hidden:
@@ -1424,7 +1408,7 @@ class Worksheet(xmlwriter.XMLwriter):
             height = self.default_row_height
 
         if height != self.original_row_height:
-            # Store the row change to allow optimisations.
+            # Store the row change to allow optimizations.
             self.row_size_changed = True
             self.default_row_height = height
 
@@ -1466,7 +1450,7 @@ class Worksheet(xmlwriter.XMLwriter):
             (first_col, last_col) = (last_col, first_col)
 
         # Check that column number is valid and store the max value
-        if self._check_dimensions(last_row, last_col):
+        if self._check_dimensions(last_row, last_col) == -1:
             return
 
         # Store the merge range.
@@ -1637,28 +1621,28 @@ class Worksheet(xmlwriter.XMLwriter):
 
         # List of valid input parameters.
         valid_parameters = {
-            'validate': 1,
-            'criteria': 1,
-            'value': 1,
-            'source': 1,
-            'minimum': 1,
-            'maximum': 1,
-            'ignore_blank': 1,
-            'dropdown': 1,
-            'show_input': 1,
-            'input_title': 1,
-            'input_message': 1,
-            'show_error': 1,
-            'error_title': 1,
-            'error_message': 1,
-            'error_type': 1,
-            'other_cells': 1,
+            'validate': True,
+            'criteria': True,
+            'value': True,
+            'source': True,
+            'minimum': True,
+            'maximum': True,
+            'ignore_blank': True,
+            'dropdown': True,
+            'show_input': True,
+            'input_title': True,
+            'input_message': True,
+            'show_error': True,
+            'error_title': True,
+            'error_message': True,
+            'error_type': True,
+            'other_cells': True,
         }
 
         # Check for valid input parameters.
         for param_key in options.keys():
             if param_key not in valid_parameters:
-                warn("Unknown parameter 'param_key' in data_validation()")
+                warn("Unknown parameter '%s' in data_validation()" % param_key)
                 return -2
 
         # Map alternative parameter names 'source' or 'minimum' to 'value'.
@@ -1696,13 +1680,18 @@ class Worksheet(xmlwriter.XMLwriter):
         else:
             options['validate'] = valid_types[options['validate']]
 
-        # No action is required for validation type 'any'.
-        if options['validate'] == 'none':
+        # No action is required for validation type 'any' if there are no
+        # input messages to display.
+        if (options['validate'] == 'none'
+                and options.get('input_title') is None
+                and options.get('input_message') is None):
             return -2
 
-        # The list and custom validations don't have a criteria so we use
+        # The any, list and custom validations don't have a criteria so we use
         # a default of 'between'.
-        if options['validate'] == 'list' or options['validate'] == 'custom':
+        if (options['validate'] == 'none'
+                or options['validate'] == 'list'
+                or options['validate'] == 'custom'):
             options['criteria'] = 'between'
             options['maximum'] = None
 
@@ -1788,30 +1777,30 @@ class Worksheet(xmlwriter.XMLwriter):
                     date_time = self._convert_date_time(options['maximum'])
                     options['maximum'] = "%.15g" % date_time
 
-        # Check that the input title dosen't exceed the maximum length.
+        # Check that the input title doesn't exceed the maximum length.
         if options.get('input_title') and len(options['input_title']) > 32:
             warn("Length of input title '%s' exceeds Excel's limit of 32"
-                 % options['input_title'])
+                 % force_unicode(options['input_title']))
             return -2
 
         # Check that the error title doesn't exceed the maximum length.
         if options.get('error_title') and len(options['error_title']) > 32:
             warn("Length of error title '%s' exceeds Excel's limit of 32"
-                 % options['error_title'])
+                 % force_unicode(options['error_title']))
             return -2
 
-        # Check that the input message dosen't exceed the maximum length.
+        # Check that the input message doesn't exceed the maximum length.
         if (options.get('input_message')
                 and len(options['input_message']) > 255):
             warn("Length of input message '%s' exceeds Excel's limit of 255"
-                 % options['input_message'])
+                 % force_unicode(options['input_message']))
             return -2
 
         # Check that the error message doesn't exceed the maximum length.
         if (options.get('error_message')
                 and len(options['error_message']) > 255):
             warn("Length of error message '%s' exceeds Excel's limit of 255"
-                 % options['error_message'])
+                 % force_unicode(options['error_message']))
             return -2
 
         # Check that the input list doesn't exceed the maximum length.
@@ -1819,7 +1808,8 @@ class Worksheet(xmlwriter.XMLwriter):
             formula = self._csv_join(*options['value'])
             if len(formula) > 255:
                 warn("Length of list items '%s' exceeds Excel's limit of "
-                     "255, use a formula range instead" % formula)
+                     "255, use a formula range instead"
+                     % force_unicode(formula))
                 return -2
 
         # Set some defaults if they haven't been defined by the user.
@@ -1874,22 +1864,22 @@ class Worksheet(xmlwriter.XMLwriter):
 
         # List of valid input parameters.
         valid_parameter = {
-            'type': 1,
-            'format': 1,
-            'criteria': 1,
-            'value': 1,
-            'minimum': 1,
-            'maximum': 1,
-            'min_type': 1,
-            'mid_type': 1,
-            'max_type': 1,
-            'min_value': 1,
-            'mid_value': 1,
-            'max_value': 1,
-            'min_color': 1,
-            'mid_color': 1,
-            'max_color': 1,
-            'multi_range': 1,
+            'type': True,
+            'format': True,
+            'criteria': True,
+            'value': True,
+            'minimum': True,
+            'maximum': True,
+            'min_type': True,
+            'mid_type': True,
+            'max_type': True,
+            'min_value': True,
+            'mid_value': True,
+            'max_value': True,
+            'min_color': True,
+            'mid_color': True,
+            'max_color': True,
+            'multi_range': True,
             'bar_color': 1}
 
         # Check for valid input parameters.
@@ -2208,7 +2198,7 @@ class Worksheet(xmlwriter.XMLwriter):
 
         Returns:
             0:  Success.
-            -1: Not supported in optimisation mode.
+            -1: Not supported in optimization mode.
             -2: Row or column is out of worksheet bounds.
             -3: Incorrect parameter or option.
         """
@@ -2230,17 +2220,17 @@ class Worksheet(xmlwriter.XMLwriter):
 
         # List of valid input parameters.
         valid_parameter = {
-            'autofilter': 1,
-            'banded_columns': 1,
-            'banded_rows': 1,
-            'columns': 1,
-            'data': 1,
-            'first_column': 1,
-            'header_row': 1,
-            'last_column': 1,
-            'name': 1,
-            'style': 1,
-            'total_row': 1,
+            'autofilter': True,
+            'banded_columns': True,
+            'banded_rows': True,
+            'columns': True,
+            'data': True,
+            'first_column': True,
+            'header_row': True,
+            'last_column': True,
+            'name': True,
+            'style': True,
+            'total_row': True,
         }
 
         # Check for valid input parameters.
@@ -2264,7 +2254,33 @@ class Worksheet(xmlwriter.XMLwriter):
 
         # Set the table name.
         if 'name' in options:
-            table['name'] = options['name']
+            name = options['name']
+            table['name'] = name
+
+            if ' ' in name:
+                warn("Name '%s' in add_table() cannot contain spaces"
+                     % force_unicode(name))
+                return -3
+
+            # Warn if the name contains invalid chars as defined by Excel.
+            if (not re.match(r'^[\w\\][\w\\.]*$', name, re.UNICODE)
+                    or re.match(r'^\d', name)):
+                warn("Invalid Excel characters in add_table(): '%s'"
+                     % force_unicode(name))
+                return -1
+
+            # Warn if the name looks like a cell name.
+            if re.match(r'^[a-zA-Z][a-zA-Z]?[a-dA-D]?[0-9]+$', name):
+                warn("Name looks like a cell name in add_table(): '%s'"
+                     % force_unicode(name))
+                return -1
+
+            # Warn if the name looks like a R1C1 cell reference.
+            if (re.match(r'^[rcRC]$', name)
+                    or re.match(r'^[rcRC]\d+[rcRC]\d+$', name)):
+                warn("Invalid name '%s' like a RC cell ref in add_table()"
+                     % force_unicode(name))
+                return -1
 
         # Set the table style.
         if 'style' in options:
@@ -2319,6 +2335,7 @@ class Worksheet(xmlwriter.XMLwriter):
                 'total_value': 0,
                 'formula': '',
                 'format': None,
+                'name_format': None,
             }
 
             # Overwrite the defaults with any use defined values.
@@ -2333,6 +2350,8 @@ class Worksheet(xmlwriter.XMLwriter):
                     # Map user defined values to internal values.
                     if user_data.get('header'):
                         col_data['name'] = user_data['header']
+
+                    col_data['name_format'] = user_data.get('header_format')
 
                     # Handle the column formula.
                     if 'formula' in user_data and user_data['formula']:
@@ -2396,7 +2415,8 @@ class Worksheet(xmlwriter.XMLwriter):
 
             # Write the column headers to the worksheet.
             if options['header_row']:
-                self.write_string(first_row, col_num, col_data['name'])
+                self.write_string(first_row, col_num, col_data['name'],
+                                  col_data['name_format'])
 
             col_id += 1
 
@@ -2595,7 +2615,7 @@ class Worksheet(xmlwriter.XMLwriter):
         sparkline['high_color'] = style['high']
         sparkline['low_color'] = style['low']
 
-        # Override the style colours with user defined colours.
+        # Override the style colors with user defined colors.
         self._set_spark_color(sparkline, options, 'series_color')
         self._set_spark_color(sparkline, options, 'negative_color')
         self._set_spark_color(sparkline, options, 'markers_color')
@@ -2755,7 +2775,7 @@ class Worksheet(xmlwriter.XMLwriter):
 
     def set_tab_color(self, color):
         """
-        Set the colour of the worksheet tab.
+        Set the color of the worksheet tab.
 
         Args:
             color: A #RGB color index.
@@ -2786,23 +2806,23 @@ class Worksheet(xmlwriter.XMLwriter):
 
         # Default values for objects that can be protected.
         defaults = {
-            'sheet': 1,
-            'content': 0,
-            'objects': 0,
-            'scenarios': 0,
-            'format_cells': 0,
-            'format_columns': 0,
-            'format_rows': 0,
-            'insert_columns': 0,
-            'insert_rows': 0,
-            'insert_hyperlinks': 0,
-            'delete_columns': 0,
-            'delete_rows': 0,
-            'select_locked_cells': 1,
-            'sort': 0,
-            'autofilter': 0,
-            'pivot_tables': 0,
-            'select_unlocked_cells': 1}
+            'sheet': True,
+            'content': False,
+            'objects': False,
+            'scenarios': False,
+            'format_cells': False,
+            'format_columns': False,
+            'format_rows': False,
+            'insert_columns': False,
+            'insert_rows': False,
+            'insert_hyperlinks': False,
+            'delete_columns': False,
+            'delete_rows': False,
+            'select_locked_cells': True,
+            'sort': False,
+            'autofilter': False,
+            'pivot_tables': False,
+            'select_unlocked_cells': True}
 
         # Overwrite the defaults with user specified values.
         for key in (options.keys()):
@@ -3473,7 +3493,7 @@ class Worksheet(xmlwriter.XMLwriter):
         # that are already written.
         if not ignore_row and not ignore_col and self.optimization == 1:
             if row < self.previous_row:
-                return -1
+                return -2
 
         if not ignore_row:
             if self.dim_rowmin is None or row < self.dim_rowmin:
@@ -3738,7 +3758,7 @@ class Worksheet(xmlwriter.XMLwriter):
         width *= x_scale
         height *= y_scale
 
-        # Scale by non 96dpi resoultions.
+        # Scale by non 96dpi resolutions.
         width *= 96.0 / x_dpi
         height *= 96.0 / y_dpi
 
@@ -3970,23 +3990,39 @@ class Worksheet(xmlwriter.XMLwriter):
         x_abs = 0
         y_abs = 0
 
+        # Adjust start column for negative offsets.
+        while x1 < 0 and col_start > 0:
+            x1 += self._size_col(col_start - 1)
+            col_start -= 1
+
+        # Adjust start row for negative offsets.
+        while y1 < 0 and row_start > 0:
+            y1 += self._size_row(row_start - 1)
+            row_start -= 1
+
+        # Ensure that the image isn't shifted off the page at top left.
+        if x1 < 0:
+            x1 = 0
+
+        if y1 < 0:
+            y1 = 0
+
         # Calculate the absolute x offset of the top-left vertex.
         if self.col_size_changed:
             for col_id in range(col_start):
                 x_abs += self._size_col(col_id)
         else:
-            # Optimisation for when the column widths haven't changed.
+            # Optimization for when the column widths haven't changed.
             x_abs += self.default_col_pixels * col_start
 
         x_abs += x1
 
         # Calculate the absolute y offset of the top-left vertex.
-        # Store the column change to allow optimisations.
         if self.row_size_changed:
             for row_id in range(row_start):
                 y_abs += self._size_row(row_id)
         else:
-            # Optimisation for when the row heights haven't changed.
+            # Optimization for when the row heights haven't changed.
             y_abs += self.default_row_pixels * row_start
 
         y_abs += y1
@@ -4001,7 +4037,7 @@ class Worksheet(xmlwriter.XMLwriter):
             y1 -= self._size_row(row_start)
             row_start += 1
 
-        # Initialise end cell to the same as the start cell.
+        # Initialize end cell to the same as the start cell.
         col_end = col_start
         row_end = row_start
 
@@ -4103,10 +4139,10 @@ class Worksheet(xmlwriter.XMLwriter):
         if not params['height']:
             params['height'] = default_height
 
-        # Set the comment background colour.
+        # Set the comment background color.
         params['color'] = xl_color(params['color']).lower()
 
-        # Convert from Excel XML style colour to XML html style colour.
+        # Convert from Excel XML style color to XML html style color.
         params['color'] = params['color'].replace('ff', '#', 1)
 
         # Convert a cell reference to a row and column.
@@ -4308,7 +4344,7 @@ class Worksheet(xmlwriter.XMLwriter):
                                         '../drawings/vmlDrawing'
                                         + str(vml_drawing_id) + '.vml'])
 
-    def _prepare_tables(self, table_id):
+    def _prepare_tables(self, table_id, seen):
         # Set the table ids for the worksheet tables.
         for table in self.tables:
             table['id'] = table_id
@@ -4316,6 +4352,15 @@ class Worksheet(xmlwriter.XMLwriter):
             if table.get('name') is None:
                 # Set a default name.
                 table['name'] = 'Table' + str(table_id)
+
+            # Check for duplicate table names.
+            name = table['name'].lower()
+
+            if name in seen:
+                raise Exception("invalid duplicate table name '%s' found." %
+                                table['name'])
+            else:
+                seen[name] = True
 
             # Store the link used for the rels file.
             self.external_table_links.append(['/table',
@@ -4348,7 +4393,7 @@ class Worksheet(xmlwriter.XMLwriter):
         return formula
 
     def _set_spark_color(self, sparkline, options, user_color):
-        # Set the sparkline colour.
+        # Set the sparkline color.
         if user_color not in options:
             return
 
@@ -4416,6 +4461,26 @@ class Worksheet(xmlwriter.XMLwriter):
                  for item in items]
 
         return ','.join(items)
+
+    def _escape_url(self, url):
+        # Don't escape URL if it looks already escaped.
+        if re.search('%[0-9a-fA-F]{2}', url):
+            return url
+
+        # Can't use url.quote() here because it doesn't match Excel.
+        url = url.replace('%', '%25')
+        url = url.replace('"', '%22')
+        url = url.replace(' ', '%20')
+        url = url.replace('<', '%3c')
+        url = url.replace('>', '%3e')
+        url = url.replace('[', '%5b')
+        url = url.replace(']', '%5d')
+        url = url.replace('^', '%5e')
+        url = url.replace('`', '%60')
+        url = url.replace('{', '%7b')
+        url = url.replace('}', '%7d')
+
+        return url
 
     ###########################################################################
     #
@@ -4753,7 +4818,7 @@ class Worksheet(xmlwriter.XMLwriter):
             self._xml_end_tag('sheetData')
 
     def _write_optimized_sheet_data(self):
-        # Write the <sheetData> element when the memory optimisation is on.
+        # Write the <sheetData> element when the memory optimization is on.
         # In this case we read the data stored in the temp file and rewrite
         # it to the XML sheet file.
         if self.dim_rowmin is None:
@@ -4950,10 +5015,10 @@ class Worksheet(xmlwriter.XMLwriter):
 
     def _write_single_row(self, current_row_num=0):
         # Write out the worksheet data as a single row with cells.
-        # This method is used when memory optimisation is on. A single
+        # This method is used when memory optimization is on. A single
         # row is written and the data table is reset. That way only
         # one row of data is kept in memory at any one time. We don't
-        # write span data in the optimised case since it is optional.
+        # write span data in the optimized case since it is optional.
 
         # Set the new previous row as the current row.
         row_num = self.previous_row
@@ -4963,7 +5028,7 @@ class Worksheet(xmlwriter.XMLwriter):
                 or self.table[row_num]):
             # Only process rows with formatting, cell data and/or comments.
 
-            # No span data in optimised mode.
+            # No span data in optimized mode.
             span = None
 
             if self.table[row_num]:
@@ -4988,7 +5053,7 @@ class Worksheet(xmlwriter.XMLwriter):
 
     def _calculate_spans(self):
         # Calculate the "spans" attribute of the <row> tag. This is an
-        # XLSX optimisation and isn't strictly required. However, it
+        # XLSX optimization and isn't strictly required. However, it
         # makes comparing files easier. The span is the same for each
         # block of 16 rows.
         spans = {}
@@ -5056,20 +5121,28 @@ class Worksheet(xmlwriter.XMLwriter):
         # Add row attributes where applicable.
         if spans:
             attributes.append(('spans', spans))
+
         if xf_index:
             attributes.append(('s', xf_index))
+
         if cell_format:
             attributes.append(('customFormat', 1))
+
         if height != self.original_row_height:
             attributes.append(('ht', height))
+
         if hidden:
             attributes.append(('hidden', 1))
+
         if height != self.original_row_height:
             attributes.append(('customHeight', 1))
+
         if level:
             attributes.append(('outlineLevel', level))
+
         if collapsed:
             attributes.append(('collapsed', 1))
+
         if self.excel_version == 2010:
             attributes.append(('x14ac:dyDescent', '0.25'))
 
@@ -5119,7 +5192,7 @@ class Worksheet(xmlwriter.XMLwriter):
                 # Write a shared string.
                 self._xml_string_element(string, attributes)
             else:
-                # Write an optimised in-line string.
+                # Write an optimized in-line string.
 
                 # Escape control characters. See SharedString.pm for details.
                 string = re.sub('(_x[0-9a-fA-F]{4}_)', r'_x005F\1', string)
@@ -5707,10 +5780,11 @@ class Worksheet(xmlwriter.XMLwriter):
             else:
                 sqref += xl_range(row_first, col_first, row_last, col_last)
 
-        attributes.append(('type', options['validate']))
+        if options['validate'] != 'none':
+            attributes.append(('type', options['validate']))
 
-        if options['criteria'] != 'between':
-            attributes.append(('operator', options['criteria']))
+            if options['criteria'] != 'between':
+                attributes.append(('operator', options['criteria']))
 
         if 'error_type' in options:
             if options['error_type'] == 1:
@@ -5744,16 +5818,19 @@ class Worksheet(xmlwriter.XMLwriter):
 
         attributes.append(('sqref', sqref))
 
-        self._xml_start_tag('dataValidation', attributes)
+        if options['validate'] == 'none':
+            self._xml_empty_tag('dataValidation', attributes)
+        else:
+            self._xml_start_tag('dataValidation', attributes)
 
-        # Write the formula1 element.
-        self._write_formula_1(options['value'])
+            # Write the formula1 element.
+            self._write_formula_1(options['value'])
 
-        # Write the formula2 element.
-        if options['maximum'] is not None:
-            self._write_formula_2(options['maximum'])
+            # Write the formula2 element.
+            if options['maximum'] is not None:
+                self._write_formula_2(options['maximum'])
 
-        self._xml_end_tag('dataValidation')
+            self._xml_end_tag('dataValidation')
 
     def _write_formula_1(self, formula):
         # Write the <formula1> element.
@@ -6289,14 +6366,14 @@ class Worksheet(xmlwriter.XMLwriter):
         empty = options.get('empty')
         attributes = []
 
-        if options.get('max'):
+        if options.get('max') is not None:
             if options['max'] == 'group':
                 options['cust_max'] = 'group'
             else:
                 attributes.append(('manualMax', options['max']))
                 options['cust_max'] = 'custom'
 
-        if options.get('min'):
+        if options.get('min') is not None:
 
             if options['min'] == 'group':
                 options['cust_min'] = 'group'
